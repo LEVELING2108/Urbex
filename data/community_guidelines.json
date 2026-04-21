@@ -1,0 +1,177 @@
+{
+  "version": "1.0",
+  "last_updated": "2024-02-16",
+  "guidelines": [
+    {
+      "category": "hate_speech",
+      "title": "Hate Speech and Discrimination",
+      "description": "Content that attacks, threatens, or dehumanizes individuals or groups based on protected characteristics",
+      "examples": {
+        "prohibited": [
+          "Content using slurs or derogatory language targeting protected groups",
+          "Content promoting superiority of one group over another",
+          "Content denying historical atrocities against groups",
+          "Content calling for exclusion or harm to groups"
+        ],
+        "allowed": [
+          "Discussion of discrimination and bias",
+          "Educational content about historical events",
+          "Self-identification within communities",
+          "Academic analysis of hate movements"
+        ]
+      },
+      "severity": 5
+    },
+    {
+      "category": "harassment",
+      "title": "Harassment and Bullying",
+      "description": "Repeated unwelcome behavior intended to intimidate, degrade, or control another person",
+      "examples": {
+        "prohibited": [
+          "Repeated unwanted contact after being asked to stop",
+          "Coordinated harassment campaigns",
+          "Sustained mockery or belittling",
+          "Creating accounts to evade blocks"
+        ],
+        "allowed": [
+          "Blocking or muting users",
+          "Reporting harassment",
+          "Single instances of criticism",
+          "Disagreement in debates"
+        ]
+      },
+      "severity": 4
+    },
+    {
+      "category": "threats",
+      "title": "Violence and Threats",
+      "description": "Content that threatens or incites violence against individuals or groups",
+      "examples": {
+        "prohibited": [
+          "Direct threats of physical harm",
+          "Indirect threats implying knowledge of personal details",
+          "Celebration of violence against individuals",
+          "Instructions for carrying out attacks"
+        ],
+        "allowed": [
+          "Discussing violence in news or history",
+          "Fictional violence in appropriate contexts",
+          "Self-defense discussions",
+          "Reporting threats to authorities"
+        ]
+      },
+      "severity": 5
+    },
+    {
+      "category": "sexual_content",
+      "title": "Sexual Harassment and Explicit Content",
+      "description": "Unwanted sexual advances or explicit content",
+      "examples": {
+        "prohibited": [
+          "Unwanted sexual propositions",
+          "Sexual comments about someone's appearance",
+          "Non-consensual sharing of intimate content",
+          "Sexual content involving minors"
+        ],
+        "allowed": [
+          "Consensual discussions between adults",
+          "Sex education content",
+          "Discussions of consent and boundaries",
+          "Reporting sexual harassment"
+        ]
+      },
+      "severity": 5
+    },
+    {
+      "category": "privacy",
+      "title": "Privacy Violations",
+      "description": "Sharing private information without consent",
+      "examples": {
+        "prohibited": [
+          "Publishing personal addresses or phone numbers",
+          "Sharing private conversations without consent",
+          "Revealing real identities of pseudonymous users",
+          "Posting private photos without permission"
+        ],
+        "allowed": [
+          "Sharing publicly available information",
+          "Discussing public figures' public information",
+          "Sharing with explicit consent",
+          "Reporting privacy violations"
+        ]
+      },
+      "severity": 4
+    },
+    {
+      "category": "spam",
+      "title": "Spam and Manipulation",
+      "description": "Repetitive, promotional, or manipulative content",
+      "examples": {
+        "prohibited": [
+          "Mass posting of identical content",
+          "Unsolicited promotional messages",
+          "Manipulation through fake accounts",
+          "Engagement farming"
+        ],
+        "allowed": [
+          "Legitimate business accounts (clearly identified)",
+          "Sharing relevant content occasionally",
+          "Community announcements",
+          "Promotional content in appropriate spaces"
+        ]
+      },
+      "severity": 2
+    },
+    {
+      "category": "misinformation",
+      "title": "Dangerous Misinformation",
+      "description": "False information that could cause real-world harm",
+      "examples": {
+        "prohibited": [
+          "Medical misinformation that could harm health",
+          "Election misinformation intended to suppress votes",
+          "Crisis misinformation during emergencies",
+          "Manipulated media presented as real"
+        ],
+        "allowed": [
+          "Satire and parody (clearly marked)",
+          "Opinions and speculation",
+          "Fact-checking and corrections",
+          "Discussions of controversial topics"
+        ]
+      },
+      "severity": 4
+    }
+  ],
+  "moderation_principles": [
+    "Context is crucial - consider the full situation",
+    "Intent matters - distinguish malice from mistake",
+    "Impact matters - consider effects on targets",
+    "Consistency - apply rules fairly across all users",
+    "Proportionality - responses should match severity",
+    "Transparency - explain decisions clearly",
+    "Appeal process - allow users to contest decisions"
+  ],
+  "special_considerations": [
+    {
+      "topic": "reclaimed_language",
+      "description": "Some communities reclaim slurs or derogatory terms. Context and speaker identity matter.",
+      "approach": "Allow within-group usage, prohibit outside attacks"
+    },
+    {
+      "topic": "political_speech",
+      "description": "Political criticism can be harsh but should not cross into harassment or hate speech",
+      "approach": "Protect robust political debate while preventing targeted harassment"
+    },
+    {
+      "topic": "satire_and_humor",
+      "description": "Satire and dark humor can be valuable but may be harmful if not clearly marked",
+      "approach": "Consider clarity of satirical intent and potential for harm"
+    },
+    {
+      "topic": "news_and_education",
+      "description": "Discussing difficult topics is important for education and awareness",
+      "approach": "Allow educational content while preventing its use as cover for hate"
+    }
+  ]
+}

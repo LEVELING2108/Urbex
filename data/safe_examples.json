@@ -1,0 +1,242 @@
+[
+  {
+    "text": "I disagree with your point and here's why...",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Respectful disagreement is part of healthy debate",
+    "severity": 1,
+    "tags": ["debate", "disagreement", "respectful"]
+  },
+  {
+    "text": "Your code has several bugs that need to be fixed",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Professional feedback about work, not personal attack",
+    "severity": 1,
+    "tags": ["professional", "feedback", "constructive"]
+  },
+  {
+    "text": "I'm frustrated with how this project is going",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Expressing personal feelings about a situation",
+    "severity": 1,
+    "tags": ["emotion", "venting", "honest"]
+  },
+  {
+    "text": "That's not accurate according to the data I've seen",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Factual correction without personal attack",
+    "severity": 1,
+    "tags": ["correction", "factual", "respectful"]
+  },
+  {
+    "text": "I don't think this is the right approach for our goals",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Professional disagreement about strategy",
+    "severity": 1,
+    "tags": ["professional", "strategy", "disagreement"]
+  },
+  {
+    "text": "This made me uncomfortable, can we discuss it?",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Setting boundaries and requesting conversation",
+    "severity": 1,
+    "tags": ["boundaries", "communication", "constructive"]
+  },
+  {
+    "text": "I think you're wrong about this",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Direct but not abusive disagreement",
+    "severity": 1,
+    "tags": ["disagreement", "direct", "honest"]
+  },
+  {
+    "text": "That joke wasn't funny to me",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Personal opinion without attacking the person",
+    "severity": 1,
+    "tags": ["opinion", "feedback", "honest"]
+  },
+  {
+    "text": "I need some space right now",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Setting personal boundaries",
+    "severity": 1,
+    "tags": ["boundaries", "self-care", "communication"]
+  },
+  {
+    "text": "This discussion isn't productive, let's take a break",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "De-escalation and conflict management",
+    "severity": 1,
+    "tags": ["de-escalation", "conflict_resolution", "mature"]
+  },
+  {
+    "text": "Your performance this quarter was below expectations",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Professional performance feedback",
+    "severity": 1,
+    "tags": ["professional", "performance", "feedback"]
+  },
+  {
+    "text": "I'm not interested in continuing this conversation",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Clear boundary setting",
+    "severity": 1,
+    "tags": ["boundaries", "clear", "communication"]
+  },
+  {
+    "text": "This policy change is going to negatively impact users",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Criticism of policy, not people",
+    "severity": 1,
+    "tags": ["policy", "criticism", "constructive"]
+  },
+  {
+    "text": "I think your idea needs more development",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Constructive criticism of an idea",
+    "severity": 1,
+    "tags": ["constructive", "feedback", "professional"]
+  },
+  {
+    "text": "No, I don't agree with that",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Simple disagreement",
+    "severity": 1,
+    "tags": ["disagreement", "clear", "direct"]
+  },
+  {
+    "text": "I'm concerned about the direction this is taking",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Expressing concern professionally",
+    "severity": 1,
+    "tags": ["concern", "professional", "honest"]
+  },
+  {
+    "text": "This doesn't make sense to me, can you explain?",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Asking for clarification",
+    "severity": 1,
+    "tags": ["clarification", "communication", "learning"]
+  },
+  {
+    "text": "I'd prefer if you didn't do that",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Polite request for different behavior",
+    "severity": 1,
+    "tags": ["request", "polite", "boundaries"]
+  },
+  {
+    "text": "This isn't working for me",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Expressing personal needs",
+    "severity": 1,
+    "tags": ["needs", "honest", "communication"]
+  },
+  {
+    "text": "I'm going to have to decline that offer",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Polite refusal",
+    "severity": 1,
+    "tags": ["decline", "polite", "clear"]
+  },
+  {
+    "text": "That's a bad idea in my opinion",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Opinion about an idea, not a person",
+    "severity": 1,
+    "tags": ["opinion", "idea", "honest"]
+  },
+  {
+    "text": "I'm disappointed with these results",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Expression of disappointment about outcomes",
+    "severity": 1,
+    "tags": ["disappointment", "outcomes", "honest"]
+  },
+  {
+    "text": "This needs significant improvement",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Critical but professional feedback",
+    "severity": 1,
+    "tags": ["feedback", "professional", "critical"]
+  },
+  {
+    "text": "I don't have time for this right now",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Setting time boundaries",
+    "severity": 1,
+    "tags": ["boundaries", "time", "clear"]
+  },
+  {
+    "text": "That's not acceptable behavior",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Setting behavioral boundaries",
+    "severity": 1,
+    "tags": ["boundaries", "behavior", "standards"]
+  },
+  {
+    "text": "I need you to take this more seriously",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Request for changed approach",
+    "severity": 1,
+    "tags": ["request", "professional", "standards"]
+  },
+  {
+    "text": "This is below the standard we expect",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Professional performance feedback",
+    "severity": 1,
+    "tags": ["professional", "standards", "feedback"]
+  },
+  {
+    "text": "I strongly disagree with this decision",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Strong disagreement without abuse",
+    "severity": 1,
+    "tags": ["disagreement", "strong", "professional"]
+  },
+  {
+    "text": "This conversation isn't helpful",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Observation about conversation quality",
+    "severity": 1,
+    "tags": ["communication", "observation", "honest"]
+  },
+  {
+    "text": "I'm really angry about how this was handled",
+    "is_toxic": false,
+    "toxicity_type": "safe",
+    "explanation": "Expressing emotion about a situation",
+    "severity": 1,
+    "tags": ["emotion", "anger", "honest"]
+  }
+]

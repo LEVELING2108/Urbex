@@ -1,0 +1,202 @@
+[
+  {
+    "text": "I know where you live and I've been watching you",
+    "is_toxic": true,
+    "toxicity_type": "indirect_threat",
+    "explanation": "Implies surveillance and potential harm through knowledge of personal details",
+    "severity": 5,
+    "tags": ["threat", "stalking", "intimidation"]
+  },
+  {
+    "text": "You're so stupid, how did you even get this job?",
+    "is_toxic": true,
+    "toxicity_type": "harassment",
+    "explanation": "Personal attack questioning competence and intelligence",
+    "severity": 3,
+    "tags": ["insult", "workplace", "bullying"]
+  },
+  {
+    "text": "People like you are ruining this country",
+    "is_toxic": true,
+    "toxicity_type": "identity_attack",
+    "explanation": "Targets a group based on implied identity characteristics",
+    "severity": 4,
+    "tags": ["discrimination", "prejudice", "othering"]
+  },
+  {
+    "text": "Why don't you just kill yourself?",
+    "is_toxic": true,
+    "toxicity_type": "harassment",
+    "explanation": "Encourages self-harm, extremely harmful statement",
+    "severity": 5,
+    "tags": ["suicide", "severe", "harmful"]
+  },
+  {
+    "text": "You're very articulate for someone like you",
+    "is_toxic": true,
+    "toxicity_type": "identity_attack",
+    "explanation": "Backhanded compliment containing implicit bias and low expectations",
+    "severity": 3,
+    "tags": ["microaggression", "subtle", "prejudice"]
+  },
+  {
+    "text": "I never said that, you're imagining things again. You're too sensitive.",
+    "is_toxic": true,
+    "toxicity_type": "harassment",
+    "explanation": "Gaslighting behavior - denying reality and invalidating feelings",
+    "severity": 4,
+    "tags": ["gaslighting", "manipulation", "psychological"]
+  },
+  {
+    "text": "Hey sexy, wanna chat? 😘",
+    "is_toxic": true,
+    "toxicity_type": "sexual_content",
+    "explanation": "Unsolicited sexual advance, inappropriate in most contexts",
+    "severity": 3,
+    "tags": ["sexual_harassment", "unwanted", "inappropriate"]
+  },
+  {
+    "text": "Despite making up only 13% of the population...",
+    "is_toxic": true,
+    "toxicity_type": "hate_speech",
+    "explanation": "Dog whistle opening a racist talking point",
+    "severity": 5,
+    "tags": ["dogwhistle", "racism", "coded"]
+  },
+  {
+    "text": "Women belong in the kitchen, not in tech",
+    "is_toxic": true,
+    "toxicity_type": "hate_speech",
+    "explanation": "Sexist statement enforcing harmful gender stereotypes",
+    "severity": 4,
+    "tags": ["sexism", "discrimination", "stereotype"]
+  },
+  {
+    "text": "Go back to where you came from",
+    "is_toxic": true,
+    "toxicity_type": "hate_speech",
+    "explanation": "Xenophobic statement targeting immigrants or minorities",
+    "severity": 4,
+    "tags": ["xenophobia", "racism", "othering"]
+  },
+  {
+    "text": "Nobody cares what you think, just shut up",
+    "is_toxic": true,
+    "toxicity_type": "harassment",
+    "explanation": "Dismissive and silencing language intended to intimidate",
+    "severity": 3,
+    "tags": ["bullying", "dismissive", "silencing"]
+  },
+  {
+    "text": "I hope something terrible happens to you and your family",
+    "is_toxic": true,
+    "toxicity_type": "indirect_threat",
+    "explanation": "Wishing harm on someone and their family",
+    "severity": 4,
+    "tags": ["threat", "malicious", "family"]
+  },
+  {
+    "text": "You're not a real woman/man",
+    "is_toxic": true,
+    "toxicity_type": "identity_attack",
+    "explanation": "Attacks someone's gender identity or expression",
+    "severity": 4,
+    "tags": ["transphobia", "identity", "invalidation"]
+  },
+  {
+    "text": "This is why nobody likes you",
+    "is_toxic": true,
+    "toxicity_type": "bullying",
+    "explanation": "Isolating language intended to make someone feel unwanted",
+    "severity": 3,
+    "tags": ["bullying", "isolation", "emotional"]
+  },
+  {
+    "text": "You should be ashamed of yourself",
+    "is_toxic": true,
+    "toxicity_type": "harassment",
+    "explanation": "Shaming language intended to induce guilt or embarrassment",
+    "severity": 2,
+    "tags": ["shaming", "guilt", "emotional"]
+  },
+  {
+    "text": "I've shared your address with some people who want to meet you",
+    "is_toxic": true,
+    "toxicity_type": "indirect_threat",
+    "explanation": "Implies doxxing and potential physical threat",
+    "severity": 5,
+    "tags": ["doxxing", "threat", "privacy"]
+  },
+  {
+    "text": "You're too ugly to be making these demands",
+    "is_toxic": true,
+    "toxicity_type": "harassment",
+    "explanation": "Appearance-based insult used to dismiss someone's views",
+    "severity": 3,
+    "tags": ["appearance", "insult", "dismissive"]
+  },
+  {
+    "text": "Just another diversity hire who can't do the job",
+    "is_toxic": true,
+    "toxicity_type": "identity_attack",
+    "explanation": "Dismisses competence based on implied minority status",
+    "severity": 4,
+    "tags": ["discrimination", "workplace", "competence"]
+  },
+  {
+    "text": "I'll make sure you never work in this industry again",
+    "is_toxic": true,
+    "toxicity_type": "indirect_threat",
+    "explanation": "Threat to career and livelihood",
+    "severity": 4,
+    "tags": ["threat", "career", "retaliation"]
+  },
+  {
+    "text": "Your opinion doesn't matter because you're just a [slur]",
+    "is_toxic": true,
+    "toxicity_type": "hate_speech",
+    "explanation": "Uses slur to dismiss someone's views based on identity",
+    "severity": 5,
+    "tags": ["slur", "dismissive", "hate"]
+  },
+  {
+    "text": "Everyone thinks you're annoying, they just don't say it",
+    "is_toxic": true,
+    "toxicity_type": "bullying",
+    "explanation": "False consensus to isolate and hurt someone",
+    "severity": 3,
+    "tags": ["bullying", "isolation", "manipulation"]
+  },
+  {
+    "text": "You're overreacting as usual. Nothing I do is ever good enough for you.",
+    "is_toxic": true,
+    "toxicity_type": "harassment",
+    "explanation": "Invalidates concerns and shifts blame - gaslighting pattern",
+    "severity": 3,
+    "tags": ["gaslighting", "invalidation", "manipulation"]
+  },
+  {
+    "text": "I have screenshots that will ruin your life",
+    "is_toxic": true,
+    "toxicity_type": "indirect_threat",
+    "explanation": "Blackmail threat using personal information",
+    "severity": 5,
+    "tags": ["blackmail", "threat", "privacy"]
+  },
+  {
+    "text": "You don't belong here. Leave before someone makes you.",
+    "is_toxic": true,
+    "toxicity_type": "indirect_threat",
+    "explanation": "Exclusionary language with implied threat of force",
+    "severity": 4,
+    "tags": ["threat", "exclusion", "intimidation"]
+  },
+  {
+    "text": "Typical [group member], always playing the victim",
+    "is_toxic": true,
+    "toxicity_type": "identity_attack",
+    "explanation": "Stereotypes group and invalidates concerns",
+    "severity": 4,
+    "tags": ["stereotype", "dismissive", "prejudice"]
+  }
+]

@@ -2,8 +2,7 @@
 Database configuration and models for URBEX
 """
 from sqlalchemy import create_engine, Column, String, Boolean, Float, Integer, DateTime, JSON, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 import datetime
 from app.config import settings
 

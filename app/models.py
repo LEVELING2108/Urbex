@@ -23,6 +23,10 @@ class ToxicityType(str, Enum):
 class ModerationRequest(BaseModel):
     """Request model for content moderation"""
     text: str = Field(..., min_length=1, max_length=5000, description="Text to moderate")
+    image_data: Optional[str] = Field(
+        default=None, 
+        description="Base64 encoded image data for multi-modal analysis"
+    )
     context: Optional[Dict[str, Any]] = Field(
         default=None,
         description="Additional context (user_id, conversation_id, etc.)"

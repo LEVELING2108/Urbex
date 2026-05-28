@@ -32,6 +32,9 @@ TOXIC_PATTERNS = {
         r"\bunwanted|unwelcome\b",
         r"\bidiot\b",
         r"\bstupid\b",
+        r"\bhate you\b",
+        r"\bhate your\b",
+        r"\bi hate\b",
     ],
     "indirect_threat": [
         r"\bi know where you\b",

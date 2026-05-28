@@ -95,4 +95,13 @@ The project includes a GitHub Actions workflow that:
 
 ---
 
+### 🐳 Run with Docker
+The easiest way to deploy URBEX in production:
+```bash
+docker-compose up -d --build
+```
+This will spin up the FastAPI service and a Redis cache for optimized performance.
+
+---
+
 **Built with ❤️ for safer digital communities.**

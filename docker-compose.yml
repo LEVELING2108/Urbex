@@ -5,20 +5,25 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: urbex-content-moderation
+    container_name: urbex-api
     ports:
       - "8000:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4-turbo-preview}
-      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
-      - FAISS_INDEX_PATH=/app/data/faiss_index
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - API_KEY=${API_KEY:-urbex_secret_key_2024}
+      - ACTIVE_PROVIDER=${ACTIVE_PROVIDER:-mock}
+      - USE_MOCK_MODE=${USE_MOCK_MODE:-true}
+      - DATABASE_URL=sqlite:////app/data/moderation_logs.db
+      - REDIS_URL=redis://redis:6379/0
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - API_HOST=0.0.0.0
-      - API_PORT=8000
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
+      - ./static:/app/static
+    depends_on:
+      - redis
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -28,6 +33,13 @@ services:
       start_period: 40s
     networks:
       - urbex-network
+
+  redis:
+    image: redis:alpine
+    container_name: urbex-redis
+    networks:
+      - urbex-network
+    restart: unless-stopped
 
 networks:
   urbex-network:

@@ -237,6 +237,54 @@ async def get_stats(db: Session = Depends(get_db)):
         )
 
 
+from sqlalchemy import func, desc
+
+@router.get("/admin/logs", response_model=List[dict])
+async def get_admin_logs(
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """Fetch recent moderation logs for the dashboard"""
+    logs = db.query(ModerationLog).order_by(desc(ModerationLog.timestamp)).limit(limit).all()
+    return [
+        {
+            "id": log.id,
+            "text": log.text,
+            "is_toxic": log.is_toxic,
+            "confidence": log.confidence,
+            "toxicity_type": log.toxicity_type,
+            "explanation": log.explanation,
+            "latency_ms": log.latency_ms,
+            "timestamp": log.timestamp.isoformat()
+        } for log in logs
+    ]
+
+
+@router.get("/admin/metrics")
+async def get_admin_metrics(db: Session = Depends(get_db)):
+    """Fetch aggregate metrics for the dashboard charts"""
+    # Toxicity distribution
+    toxic_counts = db.query(
+        ModerationLog.toxicity_type, 
+        func.count(ModerationLog.id)
+    ).group_by(ModerationLog.toxicity_type).all()
+    
+    # Decisions over time (last 7 days)
+    # This is simplified for SQLite
+    daily_stats = db.query(
+        func.date(ModerationLog.timestamp).label('date'),
+        func.count(ModerationLog.id).label('total'),
+        func.sum(func.cast(ModerationLog.is_toxic, Integer)).label('toxic')
+    ).group_by('date').order_by('date').limit(7).all()
+
+    return {
+        "toxicity_distribution": {t[0]: t[1] for t in toxic_counts},
+        "daily_trends": [
+            {"date": d[0], "total": d[1], "toxic": d[2] or 0} for d in daily_stats
+        ]
+    }
+
+
 # Background task functions
 def log_moderation_request(text: str, result: dict, context: dict = None):
     """Log moderation request to database (background task)"""

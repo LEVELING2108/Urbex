@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URBEX - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Inter', sans-serif; }
+        .sidebar { height: 100vh; background: #1a1c2e; color: white; position: fixed; width: 250px; }
+        .main-content { margin-left: 250px; padding: 30px; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        .stats-icon { font-size: 2.5rem; opacity: 0.8; }
+        .table-container { background: white; border-radius: 12px; padding: 20px; margin-top: 30px; }
+        .status-badge { font-size: 0.8rem; padding: 5px 10px; border-radius: 20px; }
+        .nav-link { color: rgba(255,255,255,0.7); border-radius: 8px; margin: 5px 15px; }
+        .nav-link.active { background: #3f51b5; color: white; }
+        .nav-link:hover { color: white; background: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="p-4 text-center">
+        <h3 class="fw-bold">🛡️ URBEX</h3>
+        <p class="small opacity-50">Safety Controller</p>
+    </div>
+    <nav class="nav flex-column mt-4">
+        <a class="nav-link active" href="/admin"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
+        <a class="nav-link" href="/"><i class="bi bi-shield-check me-2"></i> Live Demo</a>
+        <a class="nav-link" href="/docs" target="_blank"><i class="bi bi-file-earmark-code me-2"></i> API Docs</a>
+        <hr class="mx-3 opacity-25">
+        <div class="px-4 small opacity-50 mt-4">SETTINGS</div>
+        <a class="nav-link" href="#"><i class="bi bi-gear me-2"></i> Configuration</a>
+        <a class="nav-link" href="#"><i class="bi bi-database-fill me-2"></i> Vector Store</a>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Moderation Insights</h2>
+        <div class="d-flex gap-3">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-0"><i class="bi bi-key-fill"></i></span>
+                <input type="password" id="adminApiKey" class="form-control border-0" placeholder="API Key" value="urbex_secret_key_2024">
+            </div>
+            <button onclick="refreshDashboard()" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title opacity-75">Total Requests</h6>
+                        <h2 class="mb-0 fw-bold" id="totalRequests">--</h2>
+                    </div>
+                    <i class="bi bi-chat-dots stats-icon"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title opacity-75">Toxic Detected</h6>
+                        <h2 class="mb-0 fw-bold" id="totalToxic">--</h2>
+                    </div>
+                    <i class="bi bi-exclamation-triangle stats-icon"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title opacity-75">Avg. Latency</h6>
+                        <h2 class="mb-0 fw-bold" id="avgLatency">--ms</h2>
+                    </div>
+                    <i class="bi bi-lightning-charge stats-icon"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title opacity-75">Self-Improvement</h6>
+                        <h2 class="mb-0 fw-bold" id="vectorDocs">--</h2>
+                    </div>
+                    <i class="bi bi-brain stats-icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row g-4 mt-2">
+        <div class="col-md-7">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4 fw-bold">Moderation Trends (Last 7 Days)</h5>
+                    <canvas id="trendChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title mb-4 fw-bold">Toxicity Distribution</h5>
+                    <div style="max-height: 250px; position: relative;">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="table-container shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold mb-0">Recent Activity Logs</h5>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3">Export CSV</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Time</th>
+                        <th>Text Snippet</th>
+                        <th>Result</th>
+                        <th>Type</th>
+                        <th>Confidence</th>
+                        <th>Latency</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                    <!-- Logs will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let trendChart = null;
+    let distributionChart = null;
+
+    async function fetchWithAuth(url) {
+        const apiKey = document.getElementById('adminApiKey').value;
+        const response = await fetch(url, {
+            headers: { 'X-API-Key': apiKey }
+        });
+        if (!response.ok) throw new Error('API Error: ' + response.status);
+        return response.json();
+    }
+
+    async function refreshDashboard() {
+        try {
+            const [logs, metrics, stats] = await Promise.all([
+                fetchWithAuth('/api/v1/admin/logs?limit=20'),
+                fetchWithAuth('/api/v1/admin/metrics'),
+                fetchWithAuth('/api/v1/stats')
+            ]);
+
+            updateStats(logs, metrics, stats);
+            updateCharts(metrics);
+            updateLogsTable(logs);
+
+        } catch (error) {
+            console.error(error);
+            alert('Error refreshing dashboard. Check API key.');
+        }
+    }
+
+    function updateStats(logs, metrics, stats) {
+        const total = metrics.daily_trends.reduce((acc, curr) => acc + curr.total, 0);
+        const toxic = metrics.daily_trends.reduce((acc, curr) => acc + curr.toxic, 0);
+        const avgLat = logs.length > 0 ? Math.round(logs.reduce((acc, curr) => acc + curr.latency_ms, 0) / logs.length) : 0;
+
+        document.getElementById('totalRequests').innerText = total;
+        document.getElementById('totalToxic').innerText = toxic;
+        document.getElementById('avgLatency').innerText = avgLat + 'ms';
+        document.getElementById('vectorDocs').innerText = stats.total_examples;
+    }
+
+    function updateCharts(metrics) {
+        // Trend Chart
+        const trendCtx = document.getElementById('trendChart').getContext('2d');
+        if (trendChart) trendChart.destroy();
+        
+        trendChart = new Chart(trendCtx, {
+            type: 'bar',
+            data: {
+                labels: metrics.daily_trends.map(d => d.date),
+                datasets: [
+                    {
+                        label: 'Safe',
+                        data: metrics.daily_trends.map(d => d.total - d.toxic),
+                        backgroundColor: '#4caf50'
+                    },
+                    {
+                        label: 'Toxic',
+                        data: metrics.daily_trends.map(d => d.toxic),
+                        backgroundColor: '#f44336'
+                    }
+                ]
+            },
+            options: { 
+                responsive: true, 
+                plugins: { legend: { position: 'bottom' } },
+                scales: { x: { stacked: true }, y: { stacked: true } }
+            }
+        });
+
+        // Distribution Chart
+        const distCtx = document.getElementById('distributionChart').getContext('2d');
+        if (distributionChart) distributionChart.destroy();
+
+        const types = Object.keys(metrics.toxicity_distribution).filter(k => k !== 'safe');
+        
+        distributionChart = new Chart(distCtx, {
+            type: 'doughnut',
+            data: {
+                labels: types,
+                datasets: [{
+                    data: types.map(t => metrics.toxicity_distribution[t]),
+                    backgroundColor: ['#ff9800', '#2196f3', '#9c27b0', '#f44336', '#00bcd4', '#607d8b']
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right' } } 
+            }
+        });
+    }
+
+    function updateLogsTable(logs) {
+        const body = document.getElementById('logsTableBody');
+        body.innerHTML = '';
+
+        logs.forEach(log => {
+            const tr = document.createElement('tr');
+            const time = new Date(log.timestamp).toLocaleTimeString();
+            const statusClass = log.is_toxic ? 'bg-danger' : 'bg-success';
+            const statusText = log.is_toxic ? 'Toxic' : 'Safe';
+
+            tr.innerHTML = `
+                <td class="small">${time}</td>
+                <td><span class="text-muted small">${log.text.substring(0, 40)}...</span></td>
+                <td><span class="badge ${statusClass} status-badge">${statusText}</span></td>
+                <td><span class="text-capitalize small">${log.toxicity_type.replace('_', ' ')}</span></td>
+                <td>
+                    <div class="progress" style="height: 5px; width: 60px;">
+                        <div class="progress-bar ${statusClass}" style="width: ${log.confidence * 100}%"></div>
+                    </div>
+                    <small class="text-muted">${Math.round(log.confidence * 100)}%</small>
+                </td>
+                <td><small>${log.latency_ms}ms</small></td>
+                <td><button class="btn btn-sm btn-light p-1" title="Audit"><i class="bi bi-eye"></i></button></td>
+            `;
+            body.appendChild(tr);
+        });
+    }
+
+    // Initial load
+    window.onload = refreshDashboard;
+</script>
+
+</body>
+</html>

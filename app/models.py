@@ -1,7 +1,7 @@
 """
 Pydantic models for request/response validation
 """
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional, Dict, List, Any
 from datetime import datetime
 from enum import Enum
@@ -37,7 +37,8 @@ class ModerationRequest(BaseModel):
         description="If True, only check without logging"
     )
     
-    @validator('text')
+    @field_validator('text')
+    @classmethod
     def validate_text(cls, v):
         """Validate text content"""
         if not v or v.isspace():
@@ -75,8 +76,8 @@ class BatchModerationRequest(BaseModel):
     """Request model for batch moderation"""
     messages: List[BatchModerationItem] = Field(
         ...,
-        min_items=1,
-        max_items=100,
+        min_length=1,
+        max_length=100,
         description="List of messages to moderate"
     )
 
@@ -92,6 +93,8 @@ class BatchModerationResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Health check response"""
+    model_config = ConfigDict(protected_namespaces=())
+
     status: str = Field(..., description="Service status")
     version: str = Field(default="1.0.0", description="API version")
     uptime_seconds: float = Field(..., description="Service uptime")

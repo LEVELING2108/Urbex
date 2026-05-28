@@ -1,13 +1,13 @@
 # Core Framework
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-pydantic==2.5.3
-pydantic-settings==2.1.0
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.7.0
+pydantic-settings>=2.1.0
 
 # LLM and RAG
-langchain==0.1.6
-langchain-openai==0.0.5
-openai==1.10.0
+langchain>=0.1.6
+langchain-openai>=0.0.5
+openai>=1.10.0
 
 # Google Gemini (Alternative to OpenAI)
 google-generativeai==0.3.2

@@ -3,7 +3,8 @@ Main FastAPI application for URBEX Content Moderation System
 """
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import logging
 import time
@@ -30,7 +31,7 @@ except ImportError:
 
 try:
     from core.groq_agent import create_groq_moderation_agent
-    GROQ_AGENT_AVAILABLE = False
+    GROQ_AGENT_AVAILABLE = True
 except ImportError:
     GROQ_AGENT_AVAILABLE = False
 
@@ -57,6 +58,11 @@ async def lifespan(app: FastAPI):
     logger.info("Starting URBEX Content Moderation System...")
 
     try:
+        # Initialize database
+        from app.database import init_db
+        init_db()
+        logger.info("Database initialized")
+
         # Validate configuration
         validate_settings()
         logger.info("Configuration validated")
@@ -120,6 +126,25 @@ async def lifespan(app: FastAPI):
                     logger.info(f"✅ OpenAI moderation agent loaded: {settings.openai_model}")
                 else:
                     logger.warning("OpenAI API key not set, falling back to mock mode")
+                    
+            elif provider == "groq" and GROQ_AGENT_AVAILABLE:
+                # Use Groq
+                if settings.groq_api_key and settings.groq_api_key != "your_groq_api_key_here":
+                    logger.info(f"🔄 Loading Groq agent: {settings.groq_model}...")
+                    agent = create_groq_moderation_agent(
+                        vector_store_path=settings.faiss_index_path,
+                        api_key=settings.groq_api_key,
+                        model_name=settings.groq_model
+                    )
+                    app_state["moderation_agent"] = agent
+                    app_state["vector_store_loaded"] = True
+                    app_state["model_loaded"] = True
+                    app_state["mock_mode"] = False
+                    app_state["provider"] = "groq"
+                    set_moderation_agent(agent)
+                    logger.info(f"✅ Groq moderation agent loaded: {settings.groq_model}")
+                else:
+                    logger.warning("Groq API key not set, falling back to mock mode")
             else:
                 logger.warning(f"Unknown provider '{provider}', using mock mode")
                 if MOCK_AGENT_AVAILABLE:
@@ -188,18 +213,17 @@ async def global_exception_handler(request: Request, exc: Exception):
 # Include API routes
 app.include_router(router)
 
+# Mount static files
+if not os.path.exists("static"):
+    os.makedirs("static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 # Root endpoint
 @app.get("/")
 async def root():
-    """Root endpoint"""
-    return {
-        "service": "URBEX Content Moderation API",
-        "version": "1.0.0",
-        "status": "operational",
-        "docs": "/docs",
-        "health": "/health"
-    }
+    """Serve the frontend demo"""
+    return FileResponse("static/index.html")
 
 
 # Health check endpoint

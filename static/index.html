@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URBEX - Context-Aware Moderation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .hero-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 60px 0; margin-bottom: 40px; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .result-card { display: none; margin-top: 20px; }
+        .toxic { border-left: 8px solid #dc3545; }
+        .safe { border-left: 8px solid #198754; }
+        .confidence-bar { height: 10px; border-radius: 5px; }
+        #loading { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold">URBEX Moderation</h1>
+        <p class="lead">Advanced RAG-based content moderation for the real world.</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Settings Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3"><i class="bi bi-gear-fill me-2"></i>API Configuration</h5>
+                    <div class="input-group">
+                        <span class="input-group-text">API Key</span>
+                        <input type="password" id="apiKey" class="form-control" placeholder="Enter X-API-Key" value="urbex_secret_key_2024">
+                    </div>
+                    <small class="text-muted">Default key is set for demo purposes.</small>
+                </div>
+            </div>
+
+            <!-- Analysis Card -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3"><i class="bi bi-chat-left-text-fill me-2"></i>Analyze Content</h5>
+                    <div class="mb-3">
+                        <textarea id="textContent" class="form-control" rows="4" placeholder="Type or paste content here to moderate..."></textarea>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button onclick="moderate()" class="btn btn-primary btn-lg" id="analyzeBtn">
+                            <span id="btnText">Moderate Content</span>
+                            <span id="loading" class="spinner-border spinner-border-sm ms-2"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Card -->
+            <div id="resultCard" class="card result-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Moderation Result</h5>
+                        <span id="badge" class="badge rounded-pill"></span>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Confidence Score</span>
+                            <span id="confidenceValue" class="fw-bold">0%</span>
+                        </div>
+                        <div class="progress confidence-bar">
+                            <div id="confidenceBar" class="progress-bar" role="progressbar"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="fw-bold d-block">Toxicity Type:</label>
+                        <span id="toxicityType" class="text-capitalize"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="fw-bold d-block">Explanation:</label>
+                        <p id="explanation" class="mb-0"></p>
+                    </div>
+
+                    <div id="retrievedExamplesSection" class="mt-4">
+                        <label class="fw-bold mb-2">Similar Context Retrieved:</label>
+                        <ul id="examplesList" class="list-group list-group-flush"></ul>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top">
+                        <label class="fw-bold mb-2">Was this accurate?</label>
+                        <div class="d-flex gap-2">
+                            <button onclick="sendFeedback(true)" class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-hand-thumbs-up me-1"></i> Correct
+                            </button>
+                            <button onclick="sendFeedback(false)" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-hand-thumbs-down me-1"></i> Incorrect
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center py-5 text-muted">
+    <div class="container">
+        <p>URBEX Content Moderation System &copy; 2024</p>
+    </div>
+</footer>
+
+<script>
+    let currentRequestId = null;
+
+    async function moderate() {
+        const text = document.getElementById('textContent').value;
+        const apiKey = document.getElementById('apiKey').value;
+        const btn = document.getElementById('analyzeBtn');
+        const loading = document.getElementById('loading');
+        const btnText = document.getElementById('btnText');
+        const resultCard = document.getElementById('resultCard');
+
+        if (!text.trim()) {
+            alert('Please enter some text');
+            return;
+        }
+
+        // UI Loading state
+        btn.disabled = true;
+        loading.style.display = 'inline-block';
+        btnText.innerText = 'Analyzing...';
+        resultCard.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/v1/moderate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey
+                },
+                body: JSON.stringify({ text: text })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                displayResult(data);
+            } else {
+                alert('Error: ' + (data.detail || 'Failed to moderate content'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error connecting to the server');
+        } finally {
+            btn.disabled = false;
+            loading.style.display = 'none';
+            btnText.innerText = 'Moderate Content';
+        }
+    }
+
+    function displayResult(data) {
+        const resultCard = document.getElementById('resultCard');
+        const badge = document.getElementById('badge');
+        const confidenceValue = document.getElementById('confidenceValue');
+        const confidenceBar = document.getElementById('confidenceBar');
+        const toxicityType = document.getElementById('toxicityType');
+        const explanation = document.getElementById('explanation');
+        const examplesList = document.getElementById('examplesList');
+
+        resultCard.style.display = 'block';
+        resultCard.className = 'card result-card ' + (data.is_toxic ? 'toxic' : 'safe');
+        
+        badge.innerText = data.is_toxic ? 'TOXIC CONTENT' : 'SAFE CONTENT';
+        badge.className = 'badge rounded-pill ' + (data.is_toxic ? 'bg-danger' : 'bg-success');
+
+        const confPercent = Math.round(data.confidence * 100);
+        confidenceValue.innerText = confPercent + '%';
+        confidenceBar.style.width = confPercent + '%';
+        confidenceBar.className = 'progress-bar ' + (data.is_toxic ? 'bg-danger' : 'bg-success');
+
+        toxicityType.innerText = data.toxicity_type.replace('_', ' ');
+        explanation.innerText = data.explanation;
+
+        // Display examples if available
+        examplesList.innerHTML = '';
+        if (data.retrieved_examples && data.retrieved_examples.length > 0) {
+            document.getElementById('retrievedExamplesSection').style.display = 'block';
+            data.retrieved_examples.forEach(ex => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item bg-transparent small text-muted';
+                li.innerText = ex.substring(0, 150) + (ex.length > 150 ? '...' : '');
+                examplesList.appendChild(li);
+            });
+        } else {
+            document.getElementById('retrievedExamplesSection').style.display = 'none';
+        }
+
+        // Store request ID for feedback (using timestamp as ID for demo)
+        currentRequestId = 'req_' + Date.now();
+    }
+
+    async function sendFeedback(wasCorrect) {
+        const apiKey = document.getElementById('apiKey').value;
+        
+        try {
+            const response = await fetch('/api/v1/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey
+                },
+                body: JSON.stringify({
+                    request_id: currentRequestId,
+                    was_correct: wasCorrect
+                })
+            });
+
+            if (response.ok) {
+                alert('Thank you for your feedback!');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+</script>
+
+</body>
+</html>

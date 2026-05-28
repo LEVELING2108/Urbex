@@ -1,12 +1,15 @@
 """
 API routes for content moderation
 """
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Request
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Request, Depends
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 from typing import List
 import time
 import logging
 
+from app.database import get_db, ModerationLog, Feedback
+from app.api.auth import verify_api_key
 from app.models import (
     ModerationRequest,
     ModerationResponse,
@@ -18,7 +21,11 @@ from app.models import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1", tags=["moderation"])
+router = APIRouter(
+    prefix="/api/v1",
+    tags=["moderation"],
+    dependencies=[Depends(verify_api_key)]
+)
 
 # Global agent instance (initialized in main.py)
 _moderation_agent = None
@@ -60,7 +67,8 @@ async def moderate_content(
         # Perform moderation
         result, latency = agent.moderate(
             text=request.text,
-            context=request.context
+            context=request.context,
+            history=request.history
         )
         
         # Log request in background if not check_only
@@ -151,28 +159,38 @@ async def moderate_batch(
 
 
 @router.post("/feedback")
-async def submit_feedback(request: FeedbackRequest):
+async def submit_feedback(
+    request: FeedbackRequest,
+    db: Session = Depends(get_db)
+):
     """
     Submit feedback on a moderation decision
     
     Args:
         request: Feedback request
+        db: Database session
         
     Returns:
         Success message
     """
     try:
-        # In production, this would store feedback in a database
-        # for model improvement and retraining
+        # Store feedback in database
+        feedback_entry = Feedback(
+            request_id=request.request_id,
+            was_correct=request.was_correct,
+            actual_toxicity_type=request.actual_toxicity_type.value if request.actual_toxicity_type else None,
+            comment=request.comment
+        )
+        db.add(feedback_entry)
+        db.commit()
+        
         logger.info(
-            f"Feedback received for request {request.request_id}: "
+            f"Feedback received and stored for request {request.request_id}: "
             f"correct={request.was_correct}"
         )
         
-        # TODO: Store in database
-        # await store_feedback(request)
-        
         return {
+            "status": "success",
             "message": "Feedback received successfully",
             "request_id": request.request_id
         }
@@ -186,7 +204,7 @@ async def submit_feedback(request: FeedbackRequest):
 
 
 @router.get("/stats", response_model=VectorStoreStats)
-async def get_stats():
+async def get_stats(db: Session = Depends(get_db)):
     """
     Get statistics about the moderation system
     
@@ -198,6 +216,8 @@ async def get_stats():
         stats = agent.get_statistics()
         
         vector_stats = stats["vector_store"]
+        
+        # We could also add DB stats here if needed
         
         return VectorStoreStats(
             total_examples=vector_stats["total_documents"],
@@ -217,21 +237,31 @@ async def get_stats():
 
 
 # Background task functions
-async def log_moderation_request(text: str, result: dict, context: dict = None):
+def log_moderation_request(text: str, result: dict, context: dict = None):
     """Log moderation request to database (background task)"""
+    from app.database import SessionLocal
+    db = SessionLocal()
     try:
-        # In production, this would write to a database
-        log_entry = {
-            "timestamp": time.time(),
-            "text": text,
-            "result": result,
-            "context": context
-        }
+        # Create log entry
+        log_entry = ModerationLog(
+            text=text,
+            is_toxic=result.get("is_toxic"),
+            confidence=result.get("confidence"),
+            toxicity_type=result.get("toxicity_type"),
+            explanation=result.get("explanation"),
+            should_block=result.get("should_block"),
+            latency_ms=result.get("latency_ms"),
+            context=context,
+            metadata_json=result.get("metadata")
+        )
         
-        # TODO: Write to database
-        # await db.moderation_logs.insert_one(log_entry)
+        db.add(log_entry)
+        db.commit()
         
-        logger.debug(f"Logged moderation request: {log_entry}")
+        logger.debug(f"Logged moderation request to database: {text[:50]}...")
         
     except Exception as e:
-        logger.error(f"Failed to log moderation request: {e}")
+        logger.error(f"Failed to log moderation request to database: {e}")
+        db.rollback()
+    finally:
+        db.close()

@@ -27,6 +27,10 @@ class ModerationRequest(BaseModel):
         default=None,
         description="Additional context (user_id, conversation_id, etc.)"
     )
+    history: Optional[List[Dict[str, str]]] = Field(
+        default=None, 
+        description="Recent conversation history [{'role': 'user', 'content': '...'}]"
+    )
     language: Optional[str] = Field(default="en", description="Language code")
     check_only: bool = Field(
         default=False,

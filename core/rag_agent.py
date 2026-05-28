@@ -93,55 +93,63 @@ class ModerationAgent:
         self,
         text: str,
         context: Optional[Dict] = None,
+        history: Optional[List[Dict]] = None,
         include_examples: bool = True
     ) -> Tuple[ModerationResponse, int]:
         """
-        Moderate a single piece of content
-        
-        Args:
-            text: Text to moderate
-            context: Optional context (user_id, conversation_id, etc.)
-            include_examples: Whether to include retrieved examples
-            
-        Returns:
-            Tuple of (ModerationResponse, latency_ms)
+        Moderate a single piece of content with Tiered Filtering and Context
         """
         start_time = time.time()
         
         try:
-            # Generate query embedding
+            # 1. Generate query embedding
             query_embedding = self.embedding_generator.encode_single(text)
             
-            # Retrieve similar examples
-            retrieved_docs = []
-            if include_examples:
-                retrieved_docs = self.vector_store.search(
-                    query_embedding,
-                    k=self.max_retrieval_docs
-                )
+            # 2. Retrieve similar examples
+            retrieved_docs = self.vector_store.search(
+                query_embedding,
+                k=self.max_retrieval_docs
+            )
             
-            # Format examples for prompt
+            # --- TIERED FILTERING: THE "FAST PATH" ---
+            # If we find a near-identical match (sim > 0.92), use the existing classification
+            if retrieved_docs and retrieved_docs[0][1] > 0.92:
+                doc_text, similarity, metadata = retrieved_docs[0]
+                latency_ms = int((time.time() - start_time) * 1000)
+                
+                logger.info(f"⚡ FAST PATH: High similarity match found ({similarity:.2f})")
+                
+                return ModerationResponse(
+                    is_toxic=metadata.get("is_toxic", False),
+                    confidence=similarity,
+                    toxicity_type=ToxicityType(metadata.get("toxicity_type", "safe")),
+                    explanation=f"Matches existing verified pattern: {metadata.get('explanation')}",
+                    should_block=metadata.get("should_block", metadata.get("is_toxic", False)),
+                    latency_ms=latency_ms,
+                    metadata={"fast_path": True, "matched_text": doc_text}
+                ), latency_ms
+            
+            # --- CONTEXTUAL MEMORY: PREPARE HISTORY ---
+            history_str = ""
+            if history:
+                history_str = "\n".join([f"{h.get('role', 'user')}: {h.get('content', '')}" for h in history])
+
+            # 3. Format examples for prompt
             example_texts = []
             for doc_text, similarity, metadata in retrieved_docs:
                 is_toxic = metadata.get("is_toxic", False)
                 toxicity_type = metadata.get("toxicity_type", "unknown")
                 explanation = metadata.get("explanation", "")
                 
-                example_str = f"""
-                Text: "{doc_text}"
-                Classification: {"Toxic" if is_toxic else "Safe"}
-                Type: {toxicity_type}
-                Explanation: {explanation}
-                Similarity: {similarity:.2f}
-                """
+                example_str = f"Text: \"{doc_text}\"\nClassification: {'Toxic' if is_toxic else 'Safe'}\nType: {toxicity_type}\nExplanation: {explanation}"
                 example_texts.append(example_str)
             
-            # Create prompt
+            # 4. Create prompt with history
             full_prompt = format_moderation_prompt(
                 message=text,
                 retrieved_examples=example_texts,
                 guidelines=self.guidelines,
-                context=context
+                context={**(context or {}), "conversation_history": history_str}
             )
             
             # Call LLM

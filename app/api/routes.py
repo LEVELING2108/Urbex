@@ -67,6 +67,7 @@ async def moderate_content(
         # Perform moderation
         result, latency = agent.moderate(
             text=request.text,
+            image_data=request.image_data,
             context=request.context,
             history=request.history
         )

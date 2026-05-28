@@ -101,7 +101,13 @@ A comprehensive UI for platform owners to visualize system performance.
 *   **Audit Logs:** Review every moderation decision with its semantic explanation.
 *   **Access:** Available at `/admin` (requires API Key).
 
-### 3. 🐳 Run with Docker
+### 3. 🖼️ Multi-Modal Moderation (Vision)
+Advanced safety for visual content using Gemini 1.5 Flash and GPT-4o.
+*   **Image Analysis:** Detect prohibited visual content, NSFW, and text-in-image threats.
+*   **Unified API:** Send text, images, or both for a single, context-aware decision.
+*   **Frontend Integration:** Built-in image upload and preview in the live demo.
+
+### 4. 🐳 Run with Docker
 
 The easiest way to deploy URBEX in production:
 ```bash

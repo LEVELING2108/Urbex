@@ -46,12 +46,21 @@
                 <div class="card-body">
                     <h5 class="card-title mb-3"><i class="bi bi-chat-left-text-fill me-2"></i>Analyze Content</h5>
                     <div class="mb-3">
-                        <textarea id="textContent" class="form-control" rows="4" placeholder="Type or paste content here to moderate..."></textarea>
+                        <textarea id="textContent" class="form-control mb-3" rows="4" placeholder="Type or paste content here to moderate..."></textarea>
+                        
+                        <label class="form-label small fw-bold">Optional: Attach Image (Multi-modal)</label>
+                        <div class="input-group mb-2">
+                            <input type="file" id="imageInput" class="form-control form-control-sm" accept="image/*" onchange="previewImage()">
+                            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="clearImage()">Clear</button>
+                        </div>
+                        <div id="imagePreviewContainer" class="mt-2 text-center d-none">
+                            <img id="imagePreview" src="#" class="img-thumbnail" style="max-height: 150px;">
+                        </div>
                     </div>
                     <div class="d-grid gap-2">
                         <button onclick="moderate()" class="btn btn-primary btn-lg" id="analyzeBtn">
                             <span id="btnText">Moderate Content</span>
-                            <span id="loading" class="spinner-border spinner-border-sm ms-2"></span>
+                            <span id="loading" class="spinner-border spinner-border-sm ms-2" style="display: none;"></span>
                         </button>
                     </div>
                 </div>
@@ -115,6 +124,29 @@
 
 <script>
     let currentRequestId = null;
+    let selectedImageBase64 = null;
+
+    function previewImage() {
+        const file = document.getElementById('imageInput').files[0];
+        const preview = document.getElementById('imagePreview');
+        const container = document.getElementById('imagePreviewContainer');
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                selectedImageBase64 = e.target.result;
+                container.classList.remove('d-none');
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function clearImage() {
+        document.getElementById('imageInput').value = '';
+        document.getElementById('imagePreviewContainer').classList.add('d-none');
+        selectedImageBase64 = null;
+    }
 
     async function moderate() {
         const text = document.getElementById('textContent').value;
@@ -124,8 +156,8 @@
         const btnText = document.getElementById('btnText');
         const resultCard = document.getElementById('resultCard');
 
-        if (!text.trim()) {
-            alert('Please enter some text');
+        if (!text.trim() && !selectedImageBase64) {
+            alert('Please enter some text or attach an image');
             return;
         }
 
@@ -136,13 +168,18 @@
         resultCard.style.display = 'none';
 
         try {
+            const payload = { 
+                text: text || "Analyze this image content.",
+                image_data: selectedImageBase64 
+            };
+
             const response = await fetch('/api/v1/moderate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-API-Key': apiKey
                 },
-                body: JSON.stringify({ text: text })
+                body: JSON.stringify(payload)
             });
 
             const data = await response.json();

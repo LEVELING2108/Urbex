@@ -58,29 +58,21 @@ class GeminiModerationAgent:
     def moderate(
         self,
         text: str,
+        image_data: Optional[str] = None,
         context: Optional[Dict] = None,
         history: Optional[List[Dict]] = None,
         include_examples: bool = True
     ) -> Tuple[ModerationResponse, int]:
         """
-        Moderate a single piece of content using Gemini
-
-        Args:
-            text: Text to moderate
-            context: Optional context
-            history: Optional conversation history
-            include_examples: Whether to include retrieved examples
-
-        Returns:
-            Tuple of (ModerationResponse, latency_ms)
+        Moderate text and optional image using Gemini
         """
         start_time = time.time()
 
         try:
-            # Generate query embedding
+            # Generate query embedding for text-based RAG
             query_embedding = self.embedding_generator.encode_single(text)
 
-            # Retrieve similar examples
+            # Retrieve similar examples (text-only)
             retrieved_docs = []
             if include_examples:
                 retrieved_docs = self.vector_store.search(
@@ -89,7 +81,7 @@ class GeminiModerationAgent:
                 )
 
             # --- FAST PATH SIMULATION ---
-            if retrieved_docs and retrieved_docs[0][1] > 0.95:
+            if not image_data and retrieved_docs and retrieved_docs[0][1] > 0.95:
                 doc_text, similarity, metadata = retrieved_docs[0]
                 latency_ms = int((time.time() - start_time) * 1000)
                 return ModerationResponse(
@@ -108,7 +100,6 @@ class GeminiModerationAgent:
                 is_toxic = metadata.get("is_toxic", False)
                 toxicity_type = metadata.get("toxicity_type", "unknown")
                 explanation = metadata.get("explanation", "")
-
                 example_str = f"Text: \"{doc_text}\"\nClassification: {'Toxic' if is_toxic else 'Safe'}\nType: {toxicity_type}\nExplanation: {explanation}"
                 example_texts.append(example_str)
 
@@ -122,12 +113,29 @@ class GeminiModerationAgent:
                 message=text,
                 retrieved_examples=example_texts,
                 guidelines=self._get_guidelines(),
-                context={**(context or {}), "conversation_history": history_str}
+                context={**(context or {}), "conversation_history": history_str, "has_image": image_data is not None}
             )
+
+            # Prepare multi-modal content
+            content_parts = [full_prompt]
+            if image_data:
+                import base64
+                image_parts = image_data.split(",")
+                mime_type = "image/jpeg"
+                data = image_data
+                
+                if len(image_parts) > 1:
+                    mime_type = image_parts[0].split(";")[0].split(":")[1]
+                    data = image_parts[1]
+                
+                content_parts.append({
+                    "mime_type": mime_type,
+                    "data": base64.b64decode(data)
+                })
 
             # Call Gemini
             response = self.model.generate_content(
-                full_prompt,
+                content_parts,
                 safety_settings=self.safety_settings
             )
 

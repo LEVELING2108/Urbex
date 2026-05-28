@@ -6,13 +6,17 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.config import settings
 
-client = TestClient(app, headers={settings.api_key_header: settings.api_key})
+@pytest.fixture
+def client():
+    """Fixture to provide a TestClient that triggers lifespan events"""
+    with TestClient(app, headers={settings.api_key_header: settings.api_key}) as c:
+        yield c
 
 
 class TestModerateEndpoint:
     """Tests for /api/v1/moderate endpoint"""
     
-    def test_moderate_toxic_content(self):
+    def test_moderate_toxic_content(self, client):
         """Test moderation of clearly toxic content"""
         response = client.post(
             "/api/v1/moderate",
@@ -30,7 +34,7 @@ class TestModerateEndpoint:
         assert data["should_block"] is True
         assert "threat" in data["toxicity_type"].lower()
     
-    def test_moderate_safe_content(self):
+    def test_moderate_safe_content(self, client):
         """Test moderation of safe content"""
         response = client.post(
             "/api/v1/moderate",
@@ -46,7 +50,7 @@ class TestModerateEndpoint:
         assert data["is_toxic"] is False
         assert data["should_block"] is False
     
-    def test_moderate_with_context(self):
+    def test_moderate_with_context(self, client):
         """Test moderation with additional context"""
         response = client.post(
             "/api/v1/moderate",
@@ -66,7 +70,7 @@ class TestModerateEndpoint:
         assert "confidence" in data
         assert "toxicity_type" in data
     
-    def test_moderate_empty_text(self):
+    def test_moderate_empty_text(self, client):
         """Test moderation of empty text"""
         response = client.post(
             "/api/v1/moderate",
@@ -75,7 +79,7 @@ class TestModerateEndpoint:
         
         assert response.status_code == 422  # Validation error
     
-    def test_moderate_very_long_text(self):
+    def test_moderate_very_long_text(self, client):
         """Test moderation of very long text"""
         long_text = "word " * 1000  # 5000 characters
         
@@ -94,7 +98,7 @@ class TestModerateEndpoint:
 class TestBatchModerate:
     """Tests for /api/v1/moderate/batch endpoint"""
     
-    def test_batch_moderate_multiple_messages(self):
+    def test_batch_moderate_multiple_messages(self, client):
         """Test batch moderation of multiple messages"""
         response = client.post(
             "/api/v1/moderate/batch",
@@ -114,7 +118,7 @@ class TestBatchModerate:
         assert len(data["results"]) == 3
         assert data["total_toxic"] >= 1  # At least the hateful message
     
-    def test_batch_moderate_empty_list(self):
+    def test_batch_moderate_empty_list(self, client):
         """Test batch moderation with empty list"""
         response = client.post(
             "/api/v1/moderate/batch",
@@ -127,7 +131,7 @@ class TestBatchModerate:
 class TestHealthEndpoint:
     """Tests for /health endpoint"""
     
-    def test_health_check(self):
+    def test_health_check(self, client):
         """Test health check endpoint"""
         response = client.get("/health")
         
@@ -143,7 +147,7 @@ class TestHealthEndpoint:
 class TestStatsEndpoint:
     """Tests for /api/v1/stats endpoint"""
     
-    def test_get_stats(self):
+    def test_get_stats(self, client):
         """Test statistics endpoint"""
         response = client.get("/api/v1/stats")
         
@@ -158,7 +162,7 @@ class TestStatsEndpoint:
 class TestFeedbackEndpoint:
     """Tests for /api/v1/feedback endpoint"""
     
-    def test_submit_feedback(self):
+    def test_submit_feedback(self, client):
         """Test feedback submission"""
         response = client.post(
             "/api/v1/feedback",
@@ -179,7 +183,7 @@ class TestFeedbackEndpoint:
 class TestEdgeCases:
     """Tests for edge cases and error handling"""
     
-    def test_special_characters(self):
+    def test_special_characters(self, client):
         """Test with special characters"""
         response = client.post(
             "/api/v1/moderate",
@@ -191,7 +195,7 @@ class TestEdgeCases:
         
         assert response.status_code == 200
     
-    def test_unicode_characters(self):
+    def test_unicode_characters(self, client):
         """Test with unicode characters"""
         response = client.post(
             "/api/v1/moderate",
@@ -203,7 +207,7 @@ class TestEdgeCases:
         
         assert response.status_code == 200
     
-    def test_repeated_characters(self):
+    def test_repeated_characters(self, client):
         """Test with repeated characters"""
         response = client.post(
             "/api/v1/moderate",

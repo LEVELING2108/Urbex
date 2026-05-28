@@ -3,7 +3,7 @@ Pydantic models for request/response validation
 """
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional, Dict, List, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 
@@ -62,7 +62,7 @@ class ModerationResponse(BaseModel):
         default=None,
         description="Additional metadata"
     )
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class BatchModerationItem(BaseModel):
@@ -88,7 +88,7 @@ class BatchModerationResponse(BaseModel):
     total_processed: int = Field(..., description="Number of messages processed")
     total_toxic: int = Field(..., description="Number of toxic messages detected")
     total_latency_ms: int = Field(..., description="Total processing time")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class HealthResponse(BaseModel):
@@ -100,7 +100,7 @@ class HealthResponse(BaseModel):
     uptime_seconds: float = Field(..., description="Service uptime")
     vector_store_loaded: bool = Field(..., description="Vector store status")
     model_loaded: bool = Field(..., description="LLM status")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class MetricsResponse(BaseModel):
@@ -133,7 +133,7 @@ class ErrorResponse(BaseModel):
     error: str = Field(..., description="Error type")
     message: str = Field(..., description="Error message")
     details: Optional[Dict[str, Any]] = Field(default=None)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class GuidelineExample(BaseModel):

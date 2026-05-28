@@ -4,6 +4,7 @@ Database configuration and models for URBEX
 from sqlalchemy import create_engine, Column, String, Boolean, Float, Integer, DateTime, JSON, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker
 import datetime
+from datetime import timezone
 from app.config import settings
 
 # Database setup
@@ -28,7 +29,7 @@ class ModerationLog(Base):
     latency_ms = Column(Integer)
     context = Column(JSON, nullable=True)
     metadata_json = Column(JSON, nullable=True)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(timezone.utc))
 
 class Feedback(Base):
     """Database model for user feedback"""
@@ -39,7 +40,7 @@ class Feedback(Base):
     was_correct = Column(Boolean)
     actual_toxicity_type = Column(String, nullable=True)
     comment = Column(String, nullable=True)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(timezone.utc))
 
 def init_db():
     """Initialize the database"""

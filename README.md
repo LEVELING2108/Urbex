@@ -1,249 +1,98 @@
-# URBEX: Context-Aware Content Moderation System
+# 🛡️ URBEX: Advanced Context-Aware Moderation
 
-A real-time RAG-based content moderation agent designed to detect and filter toxic speech and abusive context with semantic understanding.
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![LangChain](https://img.shields.io/badge/LangChain-Enabled-FFEE00?style=for-the-badge&logo=chainlink&logoColor=black)
+![FAISS](https://img.shields.io/badge/FAISS-Vector_Store-0052CC?style=for-the-badge)
+![OpenAI](https://img.shields.io/badge/GPT--4-Context_Aware-412991?style=for-the-badge&logo=openai&logoColor=white)
 
-## 🎯 Project Overview
+URBEX is a production-grade, RAG-augmented content moderation system designed to detect toxicity with semantic understanding. Unlike traditional keyword filters, URBEX understands **intent**, **nuance**, and **context**.
 
-URBEX is an advanced content moderation system that goes beyond traditional keyword-based filtering by understanding context, nuance, and semantic meaning. Built for a social startup, it provides real-time detection of:
+## 🚀 "Pro" Gatekeeper Features
 
-- Indirect threats and veiled harassment
-- Context-dependent hate speech
-- Subtle toxicity and microaggressions
-- Sarcastic or coded abuse
+### 1. ⚡ Tiered Filtering (Fast Path)
+Reduces latency and costs by bypasssing the LLM for near-identical matches (>92% similarity) found in the local vector store.
+*   **Latency:** ~10ms for known patterns.
 
-## 🚀 Key Features
+### 2. 🧠 Contextual Memory
+Analyzes the current message in the context of recent conversation history.
+*   **Example:** Detects threats that are only visible when looking at previous messages.
 
-### 1. RAG-Based Semantic Understanding
-- **Context-Aware Analysis**: Understands nuanced language and indirect abuse
-- **Dynamic Knowledge Base**: References community guidelines and few-shot examples
-- **Low False Positives**: Retrieval-augmented approach reduces incorrect flags
+### 3. 🔄 Active Learning Loop
+A self-healing system that learns from human feedback. Incorrect predictions are automatically re-embedded into the vector store to prevent future errors.
 
-### 2. Real-Time Performance
-- **Sub-200ms Latency**: Optimized retrieval and inference pipeline
-- **Streaming Support**: Process messages as they're typed
-- **Scalable Architecture**: Handles high concurrent requests
+### 4. 🔐 Enterprise Security
+*   **API Key Auth:** Secure endpoints with `X-API-Key` validation.
+*   **Persistent Logging:** Full audit trail of all moderation decisions in SQLAlchemy/SQLite.
 
-### 3. Production-Ready API
-- **FastAPI Microservice**: RESTful endpoints with async support
-- **Detailed Logging**: Track all moderation decisions
-- **Metrics & Monitoring**: Built-in performance tracking
+---
 
 ## 🛠️ Tech Stack
 
-- **Backend Framework**: FastAPI
-- **LLM Integration**: OpenAI API (GPT-4)
-- **Orchestration**: LangChain
-- **Vector Database**: FAISS
-- **Embeddings**: HuggingFace Sentence Transformers
-- **Language**: Python 3.10+
+*   **Core:** FastAPI, Pydantic v2, Python 3.12
+*   **AI/RAG:** LangChain, FAISS, Sentence-Transformers (all-MiniLM-L6-v2)
+*   **Providers:** Support for OpenAI, Google Gemini, and Groq
+*   **Database:** SQLAlchemy (SQLite for logs/feedback)
+*   **Frontend:** Bootstrap 5, Async JS
 
-## 📁 Project Structure
+---
 
-```
-urbex-content-moderation/
-├── app/
-│   ├── main.py                 # FastAPI application
-│   ├── config.py              # Configuration management
-│   ├── models.py              # Pydantic models
-│   └── api/
-│       └── routes.py          # API endpoints
-├── core/
-│   ├── rag_agent.py           # RAG moderation agent
-│   ├── vector_store.py        # FAISS vector store manager
-│   ├── embeddings.py          # Embedding generation
-│   └── prompt_templates.py    # LLM prompts
-├── data/
-│   ├── community_guidelines.json
-│   ├── abuse_examples.json
-│   └── safe_examples.json
-├── tests/
-│   ├── test_api.py
-│   ├── test_rag_agent.py
-│   └── test_performance.py
-├── requirements.txt
-├── .env.example
-├── docker-compose.yml
-└── README.md
-```
+## 📡 API Reference
 
-## 🔧 Installation
+### Moderate Content
+`POST /api/v1/moderate`
 
-### Prerequisites
-- Python 3.10 or higher
-- OpenAI API key
-- 4GB+ RAM (for embedding models)
+**Headers:**
+`X-API-Key: your_secret_key`
 
-### Setup
-
-1. **Clone and navigate to project**
-```bash
-cd urbex-content-moderation
-```
-
-2. **Create virtual environment**
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. **Install dependencies**
-```bash
-pip install -r requirements.txt
-```
-
-4. **Configure environment**
-```bash
-cp .env.example .env
-# Edit .env with your OpenAI API key
-```
-
-5. **Initialize vector database**
-```bash
-python scripts/init_vectordb.py
-```
-
-6. **Run the server**
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-## 🎮 Usage
-
-### API Endpoints
-
-#### 1. Moderate Single Message
-```bash
-POST /api/v1/moderate
-Content-Type: application/json
-
-{
-  "text": "I hope you have a terrible day",
-  "context": {
-    "user_id": "user123",
-    "conversation_id": "conv456"
-  }
-}
-```
-
-Response:
+**Body:**
 ```json
 {
-  "is_toxic": true,
-  "confidence": 0.89,
-  "toxicity_type": "indirect_threat",
-  "explanation": "Message contains veiled hostile intent",
-  "should_block": true,
-  "latency_ms": 147
-}
-```
-
-#### 2. Batch Moderation
-```bash
-POST /api/v1/moderate/batch
-Content-Type: application/json
-
-{
-  "messages": [
-    {"text": "Hello friend!", "id": "msg1"},
-    {"text": "You're so stupid", "id": "msg2"}
+  "text": "I'm coming over now.",
+  "history": [
+    {"role": "user", "content": "I know where you live."},
+    {"role": "user", "content": "I have a weapon."}
   ]
 }
 ```
 
-#### 3. Health Check
-```bash
-GET /health
-```
+### Submit Feedback
+`POST /api/v1/feedback`
+Used to correct the system and trigger the **Active Learning Loop**.
 
-### Python SDK Example
+---
 
-```python
-import requests
+## 🚦 Getting Started
 
-API_URL = "http://localhost:8000"
+1.  **Clone & Install:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-def moderate_message(text: str):
-    response = requests.post(
-        f"{API_URL}/api/v1/moderate",
-        json={"text": text}
-    )
-    return response.json()
+2.  **Initialize Knowledge Base:**
+    ```bash
+    python scripts/init_vectordb.py
+    ```
 
-# Example usage
-result = moderate_message("I know where you live...")
-if result["should_block"]:
-    print(f"Message blocked: {result['explanation']}")
-```
+3.  **Run with Uvicorn:**
+    ```bash
+    uvicorn app.main:app --reload
+    ```
 
-## 🧪 Testing
+4.  **Promote Learning:**
+    Run this periodically to sync human feedback into the AI's memory:
+    ```bash
+    python scripts/promote_feedback.py
+    ```
 
-Run the complete test suite:
-```bash
-pytest tests/ -v --cov=app --cov=core
-```
+---
 
-Performance benchmarking:
-```bash
-python tests/benchmark.py
-```
+## 🧪 CI/CD Pipeline
+The project includes a GitHub Actions workflow that:
+1.  Lints code with **Flake8**.
+2.  Runs security audits.
+3.  Executes unit tests with **PyTest**.
 
-## 📊 Performance Metrics
+---
 
-- **Average Latency**: 147ms (p95: 189ms)
-- **Throughput**: 500+ requests/second
-- **Accuracy**: 94.3% precision, 91.7% recall
-- **False Positive Rate**: 3.2%
-
-## 🔐 Security Considerations
-
-- API key rotation supported
-- Rate limiting enabled (100 req/min per IP)
-- Request validation and sanitization
-- Audit logging for all decisions
-- No storage of actual message content
-
-## 🚀 Deployment
-
-### Docker Deployment
-```bash
-docker-compose up -d
-```
-
-### Kubernetes
-```bash
-kubectl apply -f k8s/
-```
-
-### Environment Variables
-- `OPENAI_API_KEY`: Your OpenAI API key (required)
-- `EMBEDDING_MODEL`: HuggingFace model name (default: all-MiniLM-L6-v2)
-- `FAISS_INDEX_PATH`: Path to FAISS index file
-- `LOG_LEVEL`: Logging level (default: INFO)
-- `MAX_WORKERS`: Number of worker processes
-
-## 📈 Monitoring
-
-Built-in Prometheus metrics at `/metrics`:
-- Request latency histogram
-- Toxicity detection rate
-- False positive/negative tracking
-- API error rates
-
-## 🤝 Contributing
-
-This is a portfolio project, but suggestions are welcome!
-
-## 📄 License
-
-MIT License - see LICENSE file for details
-
-## 👤 Author
-
-Built as a demonstration of advanced RAG systems and real-time AI safety applications.
-
-## 🙏 Acknowledgments
-
-- OpenAI for GPT-4 API
-- LangChain for RAG orchestration
-- HuggingFace for embedding models
-- FastAPI for the excellent web framework
+**Built with ❤️ for safer digital communities.**

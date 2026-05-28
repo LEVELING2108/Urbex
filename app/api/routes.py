@@ -76,7 +76,7 @@ async def moderate_content(
             background_tasks.add_task(
                 log_moderation_request,
                 request.text,
-                result.dict(),
+                result.model_dump(),
                 request.context
             )
         
@@ -114,12 +114,13 @@ async def moderate_batch(
         
         start_time = time.time()
         
-        # Extract texts and contexts
+        # Extract texts, contexts and histories
         texts = [item.text for item in request.messages]
         contexts = [item.context for item in request.messages]
+        histories = [item.history for item in request.messages]
         
         # Perform batch moderation
-        results = agent.moderate_batch(texts, contexts)
+        results = agent.moderate_batch(texts, contexts, histories)
         
         # Format results
         formatted_results = []
@@ -129,7 +130,7 @@ async def moderate_batch(
             formatted_results.append({
                 "id": item.id,
                 "text": item.text,
-                **result.dict()
+                **result.model_dump()
             })
             if result.is_toxic:
                 toxic_count += 1

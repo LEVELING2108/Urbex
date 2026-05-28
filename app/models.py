@@ -70,6 +70,7 @@ class BatchModerationItem(BaseModel):
     id: str = Field(..., description="Unique identifier for this item")
     text: str = Field(..., min_length=1, max_length=5000)
     context: Optional[Dict[str, Any]] = None
+    history: Optional[List[Dict[str, str]]] = None
 
 
 class BatchModerationRequest(BaseModel):

@@ -253,7 +253,8 @@ class ModerationAgent:
     def moderate_batch(
         self,
         texts: List[str],
-        contexts: Optional[List[Dict]] = None
+        contexts: Optional[List[Dict]] = None,
+        histories: Optional[List[List[Dict]]] = None
     ) -> List[Tuple[ModerationResponse, int]]:
         """
         Moderate multiple texts in batch
@@ -261,6 +262,7 @@ class ModerationAgent:
         Args:
             texts: List of texts to moderate
             contexts: Optional list of contexts
+            histories: Optional list of histories
             
         Returns:
             List of (ModerationResponse, latency_ms) tuples
@@ -268,9 +270,12 @@ class ModerationAgent:
         if contexts is None:
             contexts = [None] * len(texts)
         
+        if histories is None:
+            histories = [None] * len(texts)
+        
         results = []
-        for text, context in zip(texts, contexts):
-            result = self.moderate(text, context)
+        for text, context, history in zip(texts, contexts, histories):
+            result = self.moderate(text, context, history)
             results.append(result)
         
         return results

@@ -59,6 +59,7 @@ class GeminiModerationAgent:
         self,
         text: str,
         context: Optional[Dict] = None,
+        history: Optional[List[Dict]] = None,
         include_examples: bool = True
     ) -> Tuple[ModerationResponse, int]:
         """
@@ -67,6 +68,7 @@ class GeminiModerationAgent:
         Args:
             text: Text to moderate
             context: Optional context
+            history: Optional conversation history
             include_examples: Whether to include retrieved examples
 
         Returns:
@@ -86,6 +88,20 @@ class GeminiModerationAgent:
                     k=self.max_retrieval_docs
                 )
 
+            # --- FAST PATH SIMULATION ---
+            if retrieved_docs and retrieved_docs[0][1] > 0.95:
+                doc_text, similarity, metadata = retrieved_docs[0]
+                latency_ms = int((time.time() - start_time) * 1000)
+                return ModerationResponse(
+                    is_toxic=metadata.get("is_toxic", False),
+                    confidence=similarity,
+                    toxicity_type=ToxicityType(metadata.get("toxicity_type", "safe")),
+                    explanation=f"Matches existing pattern: {metadata.get('explanation')}",
+                    should_block=metadata.get("should_block", metadata.get("is_toxic", False)),
+                    latency_ms=latency_ms,
+                    metadata={"fast_path": True}
+                ), latency_ms
+
             # Format examples for prompt
             example_texts = []
             for doc_text, similarity, metadata in retrieved_docs:
@@ -93,21 +109,20 @@ class GeminiModerationAgent:
                 toxicity_type = metadata.get("toxicity_type", "unknown")
                 explanation = metadata.get("explanation", "")
 
-                example_str = f"""
-                Text: "{doc_text}"
-                Classification: {"Toxic" if is_toxic else "Safe"}
-                Type: {toxicity_type}
-                Explanation: {explanation}
-                Similarity: {similarity:.2f}
-                """
+                example_str = f"Text: \"{doc_text}\"\nClassification: {'Toxic' if is_toxic else 'Safe'}\nType: {toxicity_type}\nExplanation: {explanation}"
                 example_texts.append(example_str)
+
+            # Prepare history context
+            history_str = ""
+            if history:
+                history_str = "\n".join([f"{h.get('role', 'user')}: {h.get('content', '')}" for h in history])
 
             # Create prompt
             full_prompt = format_moderation_prompt(
                 message=text,
                 retrieved_examples=example_texts,
                 guidelines=self._get_guidelines(),
-                context=context
+                context={**(context or {}), "conversation_history": history_str}
             )
 
             # Call Gemini
@@ -231,15 +246,19 @@ class GeminiModerationAgent:
     def moderate_batch(
         self,
         texts: List[str],
-        contexts: Optional[List[Dict]] = None
+        contexts: Optional[List[Dict]] = None,
+        histories: Optional[List[List[Dict]]] = None
     ) -> List[Tuple[ModerationResponse, int]]:
         """Moderate multiple texts in batch"""
         if contexts is None:
             contexts = [None] * len(texts)
 
+        if histories is None:
+            histories = [None] * len(texts)
+
         results = []
-        for text, context in zip(texts, contexts):
-            result = self.moderate(text, context)
+        for text, context, history in zip(texts, contexts, histories):
+            result = self.moderate(text, context, history)
             results.append(result)
 
         return results

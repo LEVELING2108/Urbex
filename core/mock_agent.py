@@ -117,6 +117,7 @@ class MockModerationAgent:
         self,
         text: str,
         context: Optional[Dict] = None,
+        history: Optional[List[Dict]] = None,
         include_examples: bool = True
     ) -> Tuple[ModerationResponse, int]:
         """
@@ -124,7 +125,8 @@ class MockModerationAgent:
 
         Args:
             text: Text to moderate
-            context: Optional context (user_id, conversation_id, etc.)
+            context: Optional context
+            history: Optional conversation history
             include_examples: Whether to include retrieved examples
 
         Returns:
@@ -132,10 +134,16 @@ class MockModerationAgent:
         """
         start_time = time.time()
 
+        # Combine history with current text for better pattern matching
+        full_text_to_check = text
+        if history:
+            history_text = " ".join([h.get("content", "") for h in history])
+            full_text_to_check = f"{history_text} {text}"
+
         try:
             # Generate query embedding
             query_embedding = self.embedding_generator.encode_single(text)
-
+            
             # Retrieve similar examples
             retrieved_docs = []
             if include_examples:
@@ -143,6 +151,20 @@ class MockModerationAgent:
                     query_embedding,
                     k=self.max_retrieval_docs
                 )
+
+            # --- FAST PATH SIMULATION ---
+            if retrieved_docs and retrieved_docs[0][1] > 0.95:
+                doc_text, similarity, metadata = retrieved_docs[0]
+                latency_ms = int((time.time() - start_time) * 1000)
+                return ModerationResponse(
+                    is_toxic=metadata.get("is_toxic", False),
+                    confidence=similarity,
+                    toxicity_type=ToxicityType(metadata.get("toxicity_type", "safe")),
+                    explanation=f"Matches existing pattern: {metadata.get('explanation')}",
+                    should_block=metadata.get("should_block", metadata.get("is_toxic", False)),
+                    latency_ms=latency_ms,
+                    metadata={"fast_path": True}
+                ), latency_ms
 
             # Analyze retrieved examples
             toxic_votes = 0
@@ -157,8 +179,8 @@ class MockModerationAgent:
                     else:
                         safe_votes += similarity * 10
 
-            # Pattern-based detection
-            pattern_toxicity = self._detect_toxicity_type(text)
+            # Pattern-based detection (using history context)
+            pattern_toxicity = self._detect_toxicity_type(full_text_to_check)
             safe_language = self._is_safe_language(text)
 
             # Calculate confidence
@@ -255,7 +277,8 @@ class MockModerationAgent:
     def moderate_batch(
         self,
         texts: List[str],
-        contexts: Optional[List[Dict]] = None
+        contexts: Optional[List[Dict]] = None,
+        histories: Optional[List[List[Dict]]] = None
     ) -> List[Tuple[ModerationResponse, int]]:
         """
         Moderate multiple texts in batch
@@ -263,6 +286,7 @@ class MockModerationAgent:
         Args:
             texts: List of texts to moderate
             contexts: Optional list of contexts
+            histories: Optional list of histories
 
         Returns:
             List of (ModerationResponse, latency_ms) tuples
@@ -270,9 +294,12 @@ class MockModerationAgent:
         if contexts is None:
             contexts = [None] * len(texts)
 
+        if histories is None:
+            histories = [None] * len(texts)
+
         results = []
-        for text, context in zip(texts, contexts):
-            result = self.moderate(text, context)
+        for text, context, history in zip(texts, contexts, histories):
+            result = self.moderate(text, context, history)
             results.append(result)
 
         return results

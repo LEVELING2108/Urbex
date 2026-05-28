@@ -206,7 +206,7 @@ async def global_exception_handler(request: Request, exc: Exception):
             error="InternalServerError",
             message="An unexpected error occurred",
             details={"error": str(exc)}
-        ).dict()
+        ).model_dump()
     )
 
 

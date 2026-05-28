@@ -95,7 +95,14 @@ The project includes a GitHub Actions workflow that:
 
 ---
 
-### 🐳 Run with Docker
+### 2. 📊 Admin Monitoring Dashboard
+A comprehensive UI for platform owners to visualize system performance.
+*   **Real-time Analytics:** Track toxicity trends over time.
+*   **Audit Logs:** Review every moderation decision with its semantic explanation.
+*   **Access:** Available at `/admin` (requires API Key).
+
+### 3. 🐳 Run with Docker
+
 The easiest way to deploy URBEX in production:
 ```bash
 docker-compose up -d --build

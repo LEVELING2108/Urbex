@@ -226,6 +226,13 @@ async def root():
     return FileResponse("static/index.html")
 
 
+# Admin endpoint
+@app.get("/admin")
+async def admin():
+    """Serve the admin dashboard"""
+    return FileResponse("static/admin.html")
+
+
 # Health check endpoint
 @app.get("/health", response_model=HealthResponse)
 async def health_check():

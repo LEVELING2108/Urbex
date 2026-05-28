@@ -1,7 +1,7 @@
 """
 Configuration management for URBEX Content Moderation System
 """
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 from typing import List
 import os
@@ -16,96 +16,97 @@ for key, value in env_values.items():
 
 class Settings(BaseSettings):
     """Application settings with environment variable support"""
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore"
+    )
 
     # ===========================================
     # LLM API Configuration (Choose ONE provider)
     # ===========================================
     
     # Option 1: OpenAI
-    openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
-    openai_model: str = Field(default="gpt-4o-mini", env="OPENAI_MODEL")
+    openai_api_key: str = Field(default="", validation_alias="OPENAI_API_KEY")
+    openai_model: str = Field(default="gpt-4o-mini", validation_alias="OPENAI_MODEL")
     
     # Option 2: Google Gemini (FREE TIER)
-    gemini_api_key: str = Field(default="", env="GEMINI_API_KEY")
-    gemini_model: str = Field(default="gemini-1.5-flash", env="GEMINI_MODEL")
+    gemini_api_key: str = Field(default="", validation_alias="GEMINI_API_KEY")
+    gemini_model: str = Field(default="gemini-1.5-flash", validation_alias="GEMINI_MODEL")
     
     # Option 3: Groq (FREE TIER)
-    groq_api_key: str = Field(default="", env="GROQ_API_KEY")
-    groq_model: str = Field(default="llama3-70b-8192", env="GROQ_MODEL")
+    groq_api_key: str = Field(default="", validation_alias="GROQ_API_KEY")
+    groq_model: str = Field(default="llama3-70b-8192", validation_alias="GROQ_MODEL")
     
     # Option 4: Together AI ($25 FREE CREDIT)
-    together_api_key: str = Field(default="", env="TOGETHER_API_KEY")
-    together_model: str = Field(default="meta-llama/Llama-3-70b-chat-hf", env="TOGETHER_MODEL")
+    together_api_key: str = Field(default="", validation_alias="TOGETHER_API_KEY")
+    together_model: str = Field(default="meta-llama/Llama-3-70b-chat-hf", validation_alias="TOGETHER_MODEL")
     
     # Active Provider (openai, gemini, groq, together, mock)
-    active_provider: str = Field(default="mock", env="ACTIVE_PROVIDER")
+    active_provider: str = Field(default="mock", validation_alias="ACTIVE_PROVIDER")
 
     # Mock Mode (use when no API key is available)
-    use_mock_mode: bool = Field(default=True, env="USE_MOCK_MODE")
+    use_mock_mode: bool = Field(default=True, validation_alias="USE_MOCK_MODE")
 
     # Embedding Configuration
     embedding_model: str = Field(
         default="sentence-transformers/all-MiniLM-L6-v2",
-        env="EMBEDDING_MODEL"
+        validation_alias="EMBEDDING_MODEL"
     )
-    embedding_dimension: int = Field(default=384, env="EMBEDDING_DIMENSION")
+    embedding_dimension: int = Field(default=384, validation_alias="EMBEDDING_DIMENSION")
 
     # Vector Store Configuration
-    faiss_index_path: str = Field(default="./data/faiss_index", env="FAISS_INDEX_PATH")
-    vector_store_type: str = Field(default="faiss", env="VECTOR_STORE_TYPE")
+    faiss_index_path: str = Field(default="./data/faiss_index", validation_alias="FAISS_INDEX_PATH")
+    vector_store_type: str = Field(default="faiss", validation_alias="VECTOR_STORE_TYPE")
 
     # API Configuration
-    api_host: str = Field(default="0.0.0.0", env="API_HOST")
-    api_port: int = Field(default=8000, env="API_PORT")
-    api_workers: int = Field(default=4, env="API_WORKERS")
-    api_reload: bool = Field(default=False, env="API_RELOAD")
+    api_host: str = Field(default="0.0.0.0", validation_alias="API_HOST")
+    api_port: int = Field(default=8000, validation_alias="API_PORT")
+    api_workers: int = Field(default=4, validation_alias="API_WORKERS")
+    api_reload: bool = Field(default=False, validation_alias="API_RELOAD")
 
     # Rate Limiting
-    rate_limit_per_minute: int = Field(default=100, env="RATE_LIMIT_PER_MINUTE")
-    rate_limit_burst: int = Field(default=20, env="RATE_LIMIT_BURST")
+    rate_limit_per_minute: int = Field(default=100, validation_alias="RATE_LIMIT_PER_MINUTE")
+    rate_limit_burst: int = Field(default=20, validation_alias="RATE_LIMIT_BURST")
 
     # Moderation Thresholds
-    toxicity_threshold: float = Field(default=0.7, env="TOXICITY_THRESHOLD")
-    high_confidence_threshold: float = Field(default=0.85, env="HIGH_CONFIDENCE_THRESHOLD")
-    low_confidence_threshold: float = Field(default=0.5, env="LOW_CONFIDENCE_THRESHOLD")
+    toxicity_threshold: float = Field(default=0.7, validation_alias="TOXICITY_THRESHOLD")
+    high_confidence_threshold: float = Field(default=0.85, validation_alias="HIGH_CONFIDENCE_THRESHOLD")
+    low_confidence_threshold: float = Field(default=0.5, validation_alias="LOW_CONFIDENCE_THRESHOLD")
 
     # Performance Configuration
-    max_retrieval_docs: int = Field(default=5, env="MAX_RETRIEVAL_DOCS")
-    response_timeout: int = Field(default=10, env="RESPONSE_TIMEOUT")
-    cache_ttl: int = Field(default=3600, env="CACHE_TTL")
+    max_retrieval_docs: int = Field(default=5, validation_alias="MAX_RETRIEVAL_DOCS")
+    response_timeout: int = Field(default=10, validation_alias="RESPONSE_TIMEOUT")
+    cache_ttl: int = Field(default=3600, validation_alias="CACHE_TTL")
 
     # Logging
-    log_level: str = Field(default="INFO", env="LOG_LEVEL")
-    log_format: str = Field(default="json", env="LOG_FORMAT")
-    log_file: str = Field(default="logs/urbex.log", env="LOG_FILE")
+    log_level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
+    log_format: str = Field(default="json", validation_alias="LOG_FORMAT")
+    log_file: str = Field(default="logs/urbex.log", validation_alias="LOG_FILE")
 
     # Monitoring
-    enable_metrics: bool = Field(default=True, env="ENABLE_METRICS")
-    metrics_port: int = Field(default=9090, env="METRICS_PORT")
+    enable_metrics: bool = Field(default=True, validation_alias="ENABLE_METRICS")
+    metrics_port: int = Field(default=9090, validation_alias="METRICS_PORT")
 
     # Database
     database_url: str = Field(
         default="sqlite:///./data/moderation_logs.db",
-        env="DATABASE_URL"
+        validation_alias="DATABASE_URL"
     )
 
     # Security
-    api_key: str = Field(default="urbex_secret_key_2024", env="API_KEY")
-    api_key_header: str = Field(default="X-API-Key", env="API_KEY_HEADER")
+    api_key: str = Field(default="urbex_secret_key_2024", validation_alias="API_KEY")
+    api_key_header: str = Field(default="X-API-Key", validation_alias="API_KEY_HEADER")
     cors_origins: List[str] = Field(
         default=["http://localhost:3000"],
-        env="CORS_ORIGINS"
+        validation_alias="CORS_ORIGINS"
     )
 
     # Feature Flags
-    enable_batch_processing: bool = Field(default=True, env="ENABLE_BATCH_PROCESSING")
-    enable_streaming: bool = Field(default=False, env="ENABLE_STREAMING")
-    enable_detailed_logging: bool = Field(default=True, env="ENABLE_DETAILED_LOGGING")
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    enable_batch_processing: bool = Field(default=True, validation_alias="ENABLE_BATCH_PROCESSING")
+    enable_streaming: bool = Field(default=False, validation_alias="ENABLE_STREAMING")
+    enable_detailed_logging: bool = Field(default=True, validation_alias="ENABLE_DETAILED_LOGGING")
 
 
 # Global settings instance

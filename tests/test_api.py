@@ -4,8 +4,9 @@ Tests for the moderation API
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
+from app.config import settings
 
-client = TestClient(app)
+client = TestClient(app, headers={settings.api_key_header: settings.api_key})
 
 
 class TestModerateEndpoint:

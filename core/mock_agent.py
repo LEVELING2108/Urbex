@@ -119,23 +119,24 @@ class MockModerationAgent:
     def moderate(
         self,
         text: str,
+        image_data: Optional[str] = None,
         context: Optional[Dict] = None,
         history: Optional[List[Dict]] = None,
         include_examples: bool = True
     ) -> Tuple[ModerationResponse, int]:
         """
-        Moderate a single piece of content using mock logic
-
-        Args:
-            text: Text to moderate
-            context: Optional context
-            history: Optional conversation history
-            include_examples: Whether to include retrieved examples
-
-        Returns:
-            Tuple of (ModerationResponse, latency_ms)
+        Moderate text and optional image using mock logic
         """
         start_time = time.time()
+
+        # Simple image moderation mock: if image_data is provided, increase confidence
+        image_toxic_boost = 0
+        if image_data:
+            # Simulate image analysis latency
+            time.sleep(0.1)
+            # For testing, we could look for certain base64 patterns or just boost
+            # based on text context if an image is present
+            image_toxic_boost = 0.1
 
         # Combine history with current text for better pattern matching
         full_text_to_check = text

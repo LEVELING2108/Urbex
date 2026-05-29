@@ -237,7 +237,7 @@ async def get_stats(db: Session = Depends(get_db)):
         )
 
 
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, Integer
 
 @router.get("/admin/logs", response_model=List[dict])
 async def get_admin_logs(

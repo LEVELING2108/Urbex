@@ -12,6 +12,7 @@ class ToxicityType(str, Enum):
     HATE_SPEECH = "hate_speech"
     HARASSMENT = "harassment"
     INDIRECT_THREAT = "indirect_threat"
+    VIOLENCE_THREAT = "violence_threat"
     SEXUAL_CONTENT = "sexual_content"
     PROFANITY = "profanity"
     IDENTITY_ATTACK = "identity_attack"

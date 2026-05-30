@@ -186,21 +186,32 @@
     let currentSection = 'dashboard';
 
     function showSection(sectionId) {
+        console.log("Switching to section:", sectionId);
         currentSection = sectionId;
         
         // Update nav links
         document.querySelectorAll('.nav-link').forEach(link => {
             link.classList.remove('active');
-            if (link.innerText.toLowerCase().includes(sectionId)) link.classList.add('active');
+            // Match by onclick attribute or text content
+            if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(sectionId)) {
+                link.classList.add('active');
+            }
         });
 
         // Hide all sections
-        ['dashboard', 'config', 'vector'].forEach(s => {
-            document.getElementById(s + 'Section').classList.add('d-none');
+        const sections = ['dashboard', 'config', 'vector'];
+        sections.forEach(s => {
+            const el = document.getElementById(s + 'Section');
+            if (el) el.classList.add('d-none');
         });
 
         // Show selected section
-        document.getElementById(sectionId + 'Section').classList.remove('d-none');
+        const activeEl = document.getElementById(sectionId + 'Section');
+        if (activeEl) {
+            activeEl.classList.remove('d-none');
+        } else {
+            console.error("Section not found:", sectionId + 'Section');
+        }
         
         // Update title
         const titles = {
@@ -208,7 +219,7 @@
             'config': 'System Configuration',
             'vector': 'Vector Store Management'
         };
-        document.getElementById('pageTitle').innerText = titles[sectionId];
+        document.getElementById('pageTitle').innerText = titles[sectionId] || 'Admin';
 
         refreshCurrentSection();
     }

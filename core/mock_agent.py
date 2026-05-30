@@ -44,6 +44,15 @@ TOXIC_PATTERNS = {
         r"\bsomething terrible happens\b",
         r"\bi'll make sure\b",
     ],
+    "violence_threat": [
+        r"\bkill (you|yourself)\b",
+        r"\bhurt (you|yourself)\b",
+        r"\bdie\b",
+        r"\bbeat (you|up)\b",
+        r"\bstab\b",
+        r"\bshoot\b",
+        r"\bgonna get you\b",
+    ],
     "identity_attack": [
         r"\bnot a real (woman|man)\b",
         r"\bfor someone like you\b",

@@ -239,6 +239,43 @@ async def get_stats(db: Session = Depends(get_db)):
 
 
 from sqlalchemy import func, desc, Integer
+from app.config import settings
+
+@router.get("/admin/config")
+async def get_admin_config():
+    """Get current system configuration (safe subset)"""
+    return {
+        "active_provider": settings.active_provider,
+        "use_mock_mode": settings.use_mock_mode,
+        "openai_model": settings.openai_model,
+        "gemini_model": settings.gemini_model,
+        "groq_model": settings.groq_model,
+        "toxicity_threshold": settings.toxicity_threshold,
+        "high_confidence_threshold": settings.high_confidence_threshold,
+        "max_retrieval_docs": settings.max_retrieval_docs,
+        "embedding_model": settings.embedding_model
+    }
+
+
+@router.get("/admin/vector-store")
+async def get_vector_store_contents():
+    """Get samples from the vector store for management"""
+    try:
+        agent = get_moderation_agent()
+        # VectorStore doesn't usually have a 'get_all' but we can expose stats and metadata
+        stats = agent.get_statistics()
+        
+        # In a real system, we'd query the FAISS index for metadata
+        # For now, return stats and placeholders
+        return {
+            "stats": stats["vector_store"],
+            "index_path": settings.faiss_index_path,
+            "provider": stats.get("provider", "unknown")
+        }
+    except Exception as e:
+        logger.error(f"Error getting vector store data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/admin/logs", response_model=List[dict])
 async def get_admin_logs(

@@ -69,3 +69,5 @@ models/
 tmp/
 temp/
 *.tmp
+
+/GEMINI.md

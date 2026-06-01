@@ -189,6 +189,7 @@ class MockModerationAgent:
                 doc_text, similarity, metadata = retrieved_docs[0]
                 latency_ms = int((time.time() - start_time) * 1000)
                 return ModerationResponse(
+                    request_id="", # To be filled by route
                     is_toxic=metadata.get("is_toxic", False),
                     confidence=similarity,
                     toxicity_type=ToxicityType(metadata.get("toxicity_type", "safe")),
@@ -251,6 +252,7 @@ class MockModerationAgent:
             latency_ms = int((time.time() - start_time) * 1000)
 
             return ModerationResponse(
+                request_id="", # To be filled by route
                 is_toxic=is_toxic,
                 confidence=round(float(final_confidence), 2),
                 toxicity_type=ToxicityType(toxicity_type),

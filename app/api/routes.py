@@ -7,8 +7,10 @@ from sqlalchemy.orm import Session
 from typing import List
 import time
 import logging
+import uuid
+from typing import List
 
-from app.database import get_db, ModerationLog, Feedback
+from app.database import get_db, ModerationLog, Feedback, SessionLocal
 from app.api.auth import verify_api_key
 from app.models import (
     ModerationRequest,
@@ -18,6 +20,7 @@ from app.models import (
     FeedbackRequest,
     VectorStoreStats
 )
+from core.learning import active_learner
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +66,7 @@ async def moderate_content(
     """
     try:
         agent = get_moderation_agent()
+        request_id = str(uuid.uuid4())
         
         # Perform moderation
         result, latency = agent.moderate(
@@ -72,17 +76,21 @@ async def moderate_content(
             history=request.history
         )
         
+        # Inject request_id
+        result.request_id = request_id
+        
         # Log request in background if not check_only
         if not request.check_only:
             background_tasks.add_task(
                 log_moderation_request,
+                request_id,
                 request.text,
                 result.model_dump(),
                 request.context
             )
         
         logger.info(
-            f"Moderation request completed: "
+            f"Moderation request {request_id} completed: "
             f"toxic={result.is_toxic}, latency={latency}ms"
         )
         
@@ -128,11 +136,25 @@ async def moderate_batch(
         toxic_count = 0
         
         for item, (result, latency) in zip(request.messages, results):
+            request_id = str(uuid.uuid4())
+            result.request_id = request_id
+            
             formatted_results.append({
                 "id": item.id,
+                "request_id": request_id,
                 "text": item.text,
                 **result.model_dump()
             })
+            
+            # Log in background
+            background_tasks.add_task(
+                log_moderation_request,
+                request_id,
+                item.text,
+                result.model_dump(),
+                item.context
+            )
+            
             if result.is_toxic:
                 toxic_count += 1
         
@@ -163,6 +185,7 @@ async def moderate_batch(
 @router.post("/feedback")
 async def submit_feedback(
     request: FeedbackRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     """
@@ -186,6 +209,10 @@ async def submit_feedback(
         db.add(feedback_entry)
         db.commit()
         
+        # Trigger active learning in the background if it was an incorrect prediction
+        if not request.was_correct:
+            background_tasks.add_task(run_active_learning, request.request_id)
+        
         logger.info(
             f"Feedback received and stored for request {request.request_id}: "
             f"correct={request.was_correct}"
@@ -193,7 +220,7 @@ async def submit_feedback(
         
         return {
             "status": "success",
-            "message": "Feedback received successfully",
+            "message": "Feedback received successfully. Active learning loop triggered.",
             "request_id": request.request_id
         }
         
@@ -287,6 +314,7 @@ async def get_admin_logs(
     return [
         {
             "id": log.id,
+            "request_id": log.request_id,
             "text": log.text,
             "is_toxic": log.is_toxic,
             "confidence": log.confidence,
@@ -324,13 +352,14 @@ async def get_admin_metrics(db: Session = Depends(get_db)):
 
 
 # Background task functions
-def log_moderation_request(text: str, result: dict, context: dict = None):
+def log_moderation_request(request_id: str, text: str, result: dict, context: dict = None):
     """Log moderation request to database (background task)"""
     from app.database import SessionLocal
     db = SessionLocal()
     try:
         # Create log entry
         log_entry = ModerationLog(
+            request_id=request_id,
             text=text,
             is_toxic=result.get("is_toxic"),
             confidence=result.get("confidence"),
@@ -345,10 +374,24 @@ def log_moderation_request(text: str, result: dict, context: dict = None):
         db.add(log_entry)
         db.commit()
         
-        logger.debug(f"Logged moderation request to database: {text[:50]}...")
+        logger.debug(f"Logged moderation request {request_id} to database")
         
     except Exception as e:
         logger.error(f"Failed to log moderation request to database: {e}")
         db.rollback()
+    finally:
+        db.close()
+
+def run_active_learning(request_id: str):
+    """Run active learning loop for a specific request (background task)"""
+    from app.database import SessionLocal
+    db = SessionLocal()
+    try:
+        logger.info(f"Running automated active learning for request {request_id}...")
+        promoted = active_learner.promote_feedback(db, request_id)
+        if promoted:
+            logger.info(f"✅ Automated learning complete. Promoted correction to Vector Store.")
+    except Exception as e:
+        logger.error(f"Failed to run automated learning: {e}")
     finally:
         db.close()

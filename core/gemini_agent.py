@@ -147,6 +147,7 @@ class GeminiModerationAgent:
 
             # Create response object
             moderation_response = ModerationResponse(
+                request_id="", # To be filled by route
                 is_toxic=result["is_toxic"],
                 confidence=result["confidence"],
                 toxicity_type=ToxicityType(result["toxicity_type"]),

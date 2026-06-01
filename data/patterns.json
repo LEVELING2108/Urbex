@@ -1,0 +1,106 @@
+{
+  "toxic_patterns": {
+    "hate_speech": [
+      "\\b(stupid|idiot|dumb|idiotic)\\b.*\\b(you|your)\\b",
+      "\\byou're (so )?(an )?(stupid|idiot|dumb|idiotic)\\b",
+      "\\bbelong in the kitchen\\b",
+      "\\bgo back to where you came from\\b",
+      "\\bpeople like you\\b",
+      "\\bdiversity hire\\b",
+      "\\b(subhuman|vermin|parasite|infestation)\\b",
+      "\\b(white|black|brown|jewish|muslim|gay|trans) people are (all|usually|always)\\b"
+    ],
+    "harassment": [
+      "\\bnobody cares\\b",
+      "\\bshut up\\b",
+      "\\btoo sensitive\\b",
+      "\\boverreacting\\b",
+      "\\bunwanted|unwelcome\\b",
+      "\\bidiot\\b",
+      "\\bstupid\\b",
+      "\\bhate you\\b",
+      "\\bhate your\\b",
+      "\\bi hate\\b",
+      "\\byou are worthless\\b",
+      "\\bkill yourself\\b",
+      "\\bget lost\\b"
+    ],
+    "indirect_threat": [
+      "\\bi know where you\\b",
+      "\\bi've been watching\\b",
+      "\\bmake sure you never\\b",
+      "\\bruin your life\\b",
+      "\\bsomething terrible happens\\b",
+      "\\bi'll make sure\\b",
+      "\\byou better watch your back\\b",
+      "\\bi have your IP address\\b"
+    ],
+    "violence_threat": [
+      "\\bkill (you|yourself)\\b",
+      "\\bhurt (you|yourself)\\b",
+      "\\bdie\\b",
+      "\\bbeat (you|up)\\b",
+      "\\bstab\\b",
+      "\\bshoot\\b",
+      "\\bgonna get you\\b",
+      "\\b(bomb|explode|destroy) (your|the)\\b"
+    ],
+    "identity_attack": [
+      "\\bnot a real (woman|man)\\b",
+      "\\bfor someone like you\\b",
+      "\\btypical\\b.*\\b(always|never)\\b",
+      "\\byou don't belong here\\b",
+      "\\bi identify as an attack helicopter\\b"
+    ],
+    "bullying": [
+      "\\beveryone thinks\\b",
+      "\\bnobody likes you\\b",
+      "\\btoo ugly\\b",
+      "\\bdon't belong here\\b",
+      "\\byou're a loser\\b",
+      "\\bfail|failure\\b"
+    ],
+    "spam": [
+      "\\b(buy|sell|discount|cheap|price)\\b.*\\b(now|today|only)\\b",
+      "\\b(check|visit|click) (my|this) (link|site|profile)\\b",
+      "\\bfree (money|crypto|bitcoin|followers)\\b"
+    ],
+    "sexual_content": [
+      "\\b(send|show) (nudes|pics|tit|dick)\\b",
+      "\\b(sexy|hot|horny|cum|porn|xxx)\\b",
+      "\\b(fuck|rape|molest)\\b"
+    ]
+  },
+  "safe_indicators": [
+    "\\bi disagree\\b",
+    "\\bin my opinion\\b",
+    "\\bi think\\b",
+    "\\bi feel\\b",
+    "\\bcan we discuss\\b",
+    "\\bi need\\b",
+    "\\bi'd prefer\\b",
+    "\\bthank you\\b",
+    "\\bplease\\b",
+    "\\bhelp\\b"
+  ],
+  "toxic_keywords": [
+    "fucking",
+    "bitch",
+    "bastard",
+    "asshole",
+    "slut",
+    "cunt",
+    "retard",
+    "nigger",
+    "faggot",
+    "kike",
+    "chink",
+    "spic",
+    "tranny",
+    "whore",
+    "dickhead",
+    "pussy",
+    "motherfucker",
+    "wanker"
+  ]
+}

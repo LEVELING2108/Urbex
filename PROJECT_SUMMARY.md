@@ -37,6 +37,12 @@ This is a complete, production-ready implementation of a Context-Aware Content M
 - **ARCHITECTURE.md**: Detailed technical documentation
 - **Code Comments**: Well-documented codebase
 
+### 6. Enhanced Moderation Engine ✓
+- **Dynamic Pattern Loading**: Externalized word library in `data/patterns.json` for easy updates.
+- **Fuzzy Matching**: Text normalization to catch intentional misspellings and character substitutions (e.g., `h4te`, `st*pid`).
+- **Comprehensive Library**: Expanded keyword list covering 50+ common toxic terms and patterns.
+- **Multi-Category Detection**: Improved classification for Spam, Sexual Content, and Indirect Threats.
+
 ## Project Structure
 
 ```

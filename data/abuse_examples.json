@@ -198,5 +198,77 @@
     "explanation": "Stereotypes group and invalidates concerns",
     "severity": 4,
     "tags": ["stereotype", "dismissive", "prejudice"]
+  },
+  {
+    "text": "You are a total f@ilure and everyone knows it",
+    "is_toxic": true,
+    "toxicity_type": "bullying",
+    "explanation": "Personal attack using character substitution (f@ilure) to bypass filters",
+    "severity": 3,
+    "tags": ["fuzzy", "bullying", "insult"]
+  },
+  {
+    "text": "Check out this cheap crypto link for free money!!!",
+    "is_toxic": true,
+    "toxicity_type": "spam",
+    "explanation": "Promotional content for high-risk financial schemes",
+    "severity": 2,
+    "tags": ["spam", "crypto", "scam"]
+  },
+  {
+    "text": "I will f*ck you up if I see you again",
+    "is_toxic": true,
+    "toxicity_type": "violence_threat",
+    "explanation": "Direct threat of physical violence with censored profanity",
+    "severity": 5,
+    "tags": ["threat", "violence", "censored"]
+  },
+  {
+    "text": "You're a sub-human vermin who doesn't deserve to breathe",
+    "is_toxic": true,
+    "toxicity_type": "hate_speech",
+    "explanation": "Dehumanizing language targeting an individual or group",
+    "severity": 5,
+    "tags": ["dehumanization", "hate", "extreme"]
+  },
+  {
+    "text": "Hey hot stuff, want to see my private profile? click here",
+    "is_toxic": true,
+    "toxicity_type": "sexual_content",
+    "explanation": "Inappropriate sexual advance combined with a suspicious link",
+    "severity": 3,
+    "tags": ["sexual", "spam", "unwanted"]
+  },
+  {
+    "text": "Why don't you just d!e already??",
+    "is_toxic": true,
+    "toxicity_type": "violence_threat",
+    "explanation": "Wishing death upon someone using character substitution",
+    "severity": 5,
+    "tags": ["threat", "suicide", "fuzzy"]
+  },
+  {
+    "text": "Stupid b!tch, go back to the kitchen where you belong",
+    "is_toxic": true,
+    "toxicity_type": "hate_speech",
+    "explanation": "Sexist insult and harmful stereotype with fuzzy characters",
+    "severity": 4,
+    "tags": ["sexism", "hate", "insult"]
+  },
+  {
+    "text": "You're such a r*tard, I can't believe you exist",
+    "is_toxic": true,
+    "toxicity_type": "hate_speech",
+    "explanation": "Ableist slur with censoring",
+    "severity": 5,
+    "tags": ["ableism", "slur", "hate"]
+  },
+  {
+    "text": "I have your IP address and I'm coming to find you",
+    "is_toxic": true,
+    "toxicity_type": "indirect_threat",
+    "explanation": "Implies a physical threat using technical information (doxxing attempt)",
+    "severity": 5,
+    "tags": ["doxxing", "threat", "intimidation"]
   }
 ]

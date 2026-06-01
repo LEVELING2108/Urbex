@@ -5,6 +5,8 @@ Uses rule-based heuristics and similarity matching
 import time
 import logging
 import re
+import json
+import os
 from typing import Dict, List, Optional, Tuple
 
 from core.vector_store import VectorStore
@@ -13,69 +15,12 @@ from app.models import ToxicityType, ModerationResponse
 
 logger = logging.getLogger(__name__)
 
-
-# Toxic keywords and patterns (simplified for demo)
-TOXIC_PATTERNS = {
-    "hate_speech": [
-        r"\b(stupid|idiot|dumb|idiotic)\b.*\b(you|your)\b",
-        r"\byou're (so )?(an )?(stupid|idiot|dumb|idiotic)\b",
-        r"\bbelong in the kitchen\b",
-        r"\bgo back to where you came from\b",
-        r"\bpeople like you\b",
-        r"\bdiversity hire\b",
-    ],
-    "harassment": [
-        r"\bnobody cares\b",
-        r"\bshut up\b",
-        r"\btoo sensitive\b",
-        r"\boverreacting\b",
-        r"\bunwanted|unwelcome\b",
-        r"\bidiot\b",
-        r"\bstupid\b",
-        r"\bhate you\b",
-        r"\bhate your\b",
-        r"\bi hate\b",
-    ],
-    "indirect_threat": [
-        r"\bi know where you\b",
-        r"\bi've been watching\b",
-        r"\bmake sure you never\b",
-        r"\bruin your life\b",
-        r"\bsomething terrible happens\b",
-        r"\bi'll make sure\b",
-    ],
-    "violence_threat": [
-        r"\bkill (you|yourself)\b",
-        r"\bhurt (you|yourself)\b",
-        r"\bdie\b",
-        r"\bbeat (you|up)\b",
-        r"\bstab\b",
-        r"\bshoot\b",
-        r"\bgonna get you\b",
-    ],
-    "identity_attack": [
-        r"\bnot a real (woman|man)\b",
-        r"\bfor someone like you\b",
-        r"\btypical\b.*\b(always|never)\b",
-    ],
-    "bullying": [
-        r"\beveryone thinks\b",
-        r"\bnobody likes you\b",
-        r"\btoo ugly\b",
-        r"\bdon't belong here\b",
-    ],
+# Default patterns in case JSON fails to load
+DEFAULT_TOXIC_PATTERNS = {
+    "hate_speech": [r"\b(stupid|idiot|dumb|idiotic)\b.*\b(you|your)\b"],
+    "harassment": [r"\bshut up\b"],
+    "violence_threat": [r"\bkill (you|yourself)\b"]
 }
-
-SAFE_INDICATORS = [
-    r"\bi disagree\b",
-    r"\bin my opinion\b",
-    r"\bi think\b",
-    r"\bi feel\b",
-    r"\bcan we discuss\b",
-    r"\bi need\b",
-    r"\bi'd prefer\b",
-]
-
 
 class MockModerationAgent:
     """Mock content moderation agent using rule-based heuristics"""
@@ -84,7 +29,8 @@ class MockModerationAgent:
         self,
         vector_store: VectorStore,
         embedding_generator: EmbeddingGenerator,
-        max_retrieval_docs: int = 5
+        max_retrieval_docs: int = 5,
+        patterns_path: str = "data/patterns.json"
     ):
         """
         Initialize the mock moderation agent
@@ -93,35 +39,85 @@ class MockModerationAgent:
             vector_store: FAISS vector store with examples
             embedding_generator: Embedding generator
             max_retrieval_docs: Maximum documents to retrieve
+            patterns_path: Path to the JSON file containing toxic patterns
         """
         self.vector_store = vector_store
         self.embedding_generator = embedding_generator
         self.max_retrieval_docs = max_retrieval_docs
+        
+        # Load patterns and keywords
+        self.patterns, self.safe_indicators, self.keywords = self._load_patterns(patterns_path)
 
         # Compile regex patterns
         self.compiled_patterns = {}
-        for toxicity_type, patterns in TOXIC_PATTERNS.items():
+        for toxicity_type, patterns in self.patterns.items():
             self.compiled_patterns[toxicity_type] = [
                 re.compile(p, re.IGNORECASE) for p in patterns
             ]
+        
+        self.compiled_safe = [re.compile(p, re.IGNORECASE) for p in self.safe_indicators]
+        self.compiled_keywords = [re.compile(f"\\b{re.escape(k)}\\b", re.IGNORECASE) for k in self.keywords]
 
-        logger.info("Mock moderation agent initialized (rule-based mode)")
+        logger.info(f"Mock moderation agent initialized (rule-based mode) with {len(self.compiled_keywords)} keywords")
+
+    def _load_patterns(self, path: str) -> Tuple[Dict, List, List]:
+        """Load patterns from JSON file"""
+        try:
+            if os.path.exists(path):
+                with open(path, 'r') as f:
+                    data = json.load(f)
+                    return (
+                        data.get("toxic_patterns", DEFAULT_TOXIC_PATTERNS),
+                        data.get("safe_indicators", []),
+                        data.get("toxic_keywords", [])
+                    )
+            else:
+                logger.warning(f"Patterns file not found at {path}, using defaults")
+        except Exception as e:
+            logger.error(f"Failed to load patterns from {path}: {e}")
+        
+        return DEFAULT_TOXIC_PATTERNS, [], []
+
+    def _normalize_text(self, text: str) -> str:
+        """Normalize text for fuzzy matching (handle common substitutions)"""
+        text = text.lower()
+        
+        # Common character substitutions
+        substitutions = {
+            '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '8': 'b',
+            '@': 'a', '$': 's', '!': 'i', '*': 'u', '+': 't'
+        }
+        
+        for char, sub in substitutions.items():
+            text = text.replace(char, sub)
+            
+        # Remove common repeated characters (e.g., "haaaaate" -> "hate")
+        text = re.sub(r'(.)\1{2,}', r'\1', text)
+        
+        return text
 
     def _detect_toxicity_type(self, text: str) -> Optional[str]:
-        """Detect toxicity type using pattern matching"""
+        """Detect toxicity type using pattern and keyword matching with normalization"""
         text_lower = text.lower()
+        normalized_text = self._normalize_text(text)
 
+        # 1. Check keyword list first (original and normalized)
+        for kw_pattern in self.compiled_keywords:
+            if kw_pattern.search(text_lower) or kw_pattern.search(normalized_text):
+                return "harassment"
+
+        # 2. Check regex patterns (original and normalized)
         for toxicity_type, patterns in self.compiled_patterns.items():
             for pattern in patterns:
-                if pattern.search(text_lower):
+                if pattern.search(text_lower) or pattern.search(normalized_text):
                     return toxicity_type
 
         return None
 
     def _is_safe_language(self, text: str) -> bool:
         """Check if text contains safe language indicators"""
-        for pattern in SAFE_INDICATORS:
-            if re.search(pattern, text, re.IGNORECASE):
+        for pattern in self.compiled_safe:
+            if pattern.search(text):
                 return True
         return False
 

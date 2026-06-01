@@ -1,4 +1,34 @@
 {
+  "category_weights": {
+    "hate_speech": 0.85,
+    "harassment": 0.65,
+    "indirect_threat": 0.8,
+    "violence_threat": 0.95,
+    "identity_attack": 0.8,
+    "bullying": 0.55,
+    "spam": 0.4,
+    "sexual_content": 0.75
+  },
+  "keyword_weights": {
+    "fucking": 0.7,
+    "bitch": 0.6,
+    "bastard": 0.5,
+    "asshole": 0.7,
+    "slut": 0.8,
+    "cunt": 0.9,
+    "retard": 0.9,
+    "nigger": 1.0,
+    "faggot": 1.0,
+    "kike": 1.0,
+    "chink": 1.0,
+    "spic": 1.0,
+    "tranny": 1.0,
+    "whore": 0.8,
+    "dickhead": 0.6,
+    "pussy": 0.7,
+    "motherfucker": 0.8,
+    "wanker": 0.5
+  },
   "toxic_patterns": {
     "hate_speech": [
       "\\b(stupid|idiot|dumb|idiotic)\\b.*\\b(you|your)\\b",

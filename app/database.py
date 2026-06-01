@@ -20,6 +20,7 @@ class ModerationLog(Base):
     __tablename__ = "moderation_logs"
 
     id = Column(Integer, primary_key=True, index=True)
+    request_id = Column(String, index=True, nullable=True)
     text = Column(String)
     is_toxic = Column(Boolean)
     confidence = Column(Float)

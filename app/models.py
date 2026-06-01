@@ -53,6 +53,7 @@ class ModerationRequest(BaseModel):
 
 class ModerationResponse(BaseModel):
     """Response model for content moderation"""
+    request_id: str = Field(..., description="Unique ID for this moderation request")
     is_toxic: bool = Field(..., description="Whether content is toxic")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score")
     toxicity_type: ToxicityType = Field(..., description="Type of toxicity detected")

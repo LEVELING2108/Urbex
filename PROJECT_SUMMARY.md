@@ -44,6 +44,15 @@ This is a complete, production-ready implementation of a Context-Aware Content M
 - **Hybrid Confidence**: Intelligent merging of rule-based scoring and Vector Store similarity (RAG).
 - **Comprehensive Library**: Expanded keyword list covering 50+ common toxic terms and patterns.
 
+### 7. Automated Active Learning ✓
+- **Feedback Loop**: Integrated background task that automatically re-embeds corrected examples into the Vector Store.
+- **Request Tracking**: Implementation of `request_id` (UUID) across logs and responses to link feedback accurately.
+- **Self-Healing Index**: The system "learns" from human corrections in real-time without manual script execution.
+
+### 8. Multi-Modal Vision Support ✓
+- **GPT-4o Vision**: Expanded OpenAI RAG agent to handle base64 image data for visual threat detection.
+- **Unified Multi-Modal API**: Consistent handling of text + image analysis across Gemini and OpenAI providers.
+
 ## Project Structure
 
 ```

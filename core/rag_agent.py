@@ -92,17 +92,18 @@ class ModerationAgent:
     def moderate(
         self,
         text: str,
+        image_data: Optional[str] = None,
         context: Optional[Dict] = None,
         history: Optional[List[Dict]] = None,
         include_examples: bool = True
     ) -> Tuple[ModerationResponse, int]:
         """
-        Moderate a single piece of content with Tiered Filtering and Context
+        Moderate text and optional image with Tiered Filtering and Context
         """
         start_time = time.time()
         
         try:
-            # 1. Generate query embedding
+            # 1. Generate query embedding for text-based RAG
             query_embedding = self.embedding_generator.encode_single(text)
             
             # 2. Retrieve similar examples
@@ -112,14 +113,15 @@ class ModerationAgent:
             )
             
             # --- TIERED FILTERING: THE "FAST PATH" ---
-            # If we find a near-identical match (sim > 0.92), use the existing classification
-            if retrieved_docs and retrieved_docs[0][1] > 0.92:
+            # If we find a near-identical match (sim > 0.92) and NO image data
+            if not image_data and retrieved_docs and retrieved_docs[0][1] > 0.92:
                 doc_text, similarity, metadata = retrieved_docs[0]
                 latency_ms = int((time.time() - start_time) * 1000)
                 
                 logger.info(f"⚡ FAST PATH: High similarity match found ({similarity:.2f})")
                 
                 return ModerationResponse(
+                    request_id="", # To be filled by route
                     is_toxic=metadata.get("is_toxic", False),
                     confidence=similarity,
                     toxicity_type=ToxicityType(metadata.get("toxicity_type", "safe")),
@@ -149,13 +151,27 @@ class ModerationAgent:
                 message=text,
                 retrieved_examples=example_texts,
                 guidelines=self.guidelines,
-                context={**(context or {}), "conversation_history": history_str}
+                context={**(context or {}), "conversation_history": history_str, "has_image": image_data is not None}
             )
             
-            # Call LLM
+            # 5. Prepare messages (Multi-modal if image provided)
+            content = [{"type": "text", "text": full_prompt}]
+            
+            if image_data:
+                # Handle base64 image data
+                if "," in image_data:
+                    image_url = image_data # Already includes data:image/...;base64,
+                else:
+                    image_url = f"data:image/jpeg;base64,{image_data}"
+                    
+                content.append({
+                    "type": "image_url",
+                    "image_url": {"url": image_url}
+                })
+            
             messages = [
                 SystemMessage(content=get_system_prompt()),
-                HumanMessage(content=full_prompt)
+                HumanMessage(content=content)
             ]
             
             response = self.llm.invoke(messages)
@@ -168,6 +184,7 @@ class ModerationAgent:
             
             # Create response object
             moderation_response = ModerationResponse(
+                request_id="", # To be filled by route
                 is_toxic=result["is_toxic"],
                 confidence=result["confidence"],
                 toxicity_type=ToxicityType(result["toxicity_type"]),
@@ -178,7 +195,8 @@ class ModerationAgent:
                 metadata={
                     "severity": result.get("severity", 3),
                     "key_indicators": result.get("key_indicators", []),
-                    "model": self.llm.model_name
+                    "model": self.llm.model_name,
+                    "multi_modal": image_data is not None
                 }
             )
             

@@ -45,6 +45,8 @@ logs/
 data/faiss_index/
 *.pkl
 *.index
+*.db
+*.sqlite
 
 # Testing
 .pytest_cache/

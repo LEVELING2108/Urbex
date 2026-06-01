@@ -56,6 +56,9 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Project Instructions
+GEMINI.md
+
 # Jupyter Notebooks
 .ipynb_checkpoints
 

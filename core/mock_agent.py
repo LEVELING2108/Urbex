@@ -45,8 +45,12 @@ class MockModerationAgent:
         self.embedding_generator = embedding_generator
         self.max_retrieval_docs = max_retrieval_docs
         
-        # Load patterns and keywords
-        self.patterns, self.safe_indicators, self.keywords = self._load_patterns(patterns_path)
+        # Load patterns, keywords, and weights
+        (self.patterns, 
+         self.safe_indicators, 
+         self.keywords, 
+         self.category_weights, 
+         self.keyword_weights) = self._load_patterns(patterns_path)
 
         # Compile regex patterns
         self.compiled_patterns = {}
@@ -56,12 +60,14 @@ class MockModerationAgent:
             ]
         
         self.compiled_safe = [re.compile(p, re.IGNORECASE) for p in self.safe_indicators]
-        self.compiled_keywords = [re.compile(f"\\b{re.escape(k)}\\b", re.IGNORECASE) for k in self.keywords]
+        self.compiled_keywords = {
+            k: re.compile(f"\\b{re.escape(k)}\\b", re.IGNORECASE) for k in self.keywords
+        }
 
-        logger.info(f"Mock moderation agent initialized (rule-based mode) with {len(self.compiled_keywords)} keywords")
+        logger.info(f"Mock moderation agent initialized (rule-based mode) with {len(self.compiled_keywords)} keywords and weighted scoring")
 
-    def _load_patterns(self, path: str) -> Tuple[Dict, List, List]:
-        """Load patterns from JSON file"""
+    def _load_patterns(self, path: str) -> Tuple[Dict, List, List, Dict, Dict]:
+        """Load patterns and weights from JSON file"""
         try:
             if os.path.exists(path):
                 with open(path, 'r') as f:
@@ -69,14 +75,16 @@ class MockModerationAgent:
                     return (
                         data.get("toxic_patterns", DEFAULT_TOXIC_PATTERNS),
                         data.get("safe_indicators", []),
-                        data.get("toxic_keywords", [])
+                        data.get("toxic_keywords", []),
+                        data.get("category_weights", {}),
+                        data.get("keyword_weights", {})
                     )
             else:
                 logger.warning(f"Patterns file not found at {path}, using defaults")
         except Exception as e:
             logger.error(f"Failed to load patterns from {path}: {e}")
         
-        return DEFAULT_TOXIC_PATTERNS, [], []
+        return DEFAULT_TOXIC_PATTERNS, [], [], {}, {}
 
     def _normalize_text(self, text: str) -> str:
         """Normalize text for fuzzy matching (handle common substitutions)"""
@@ -96,23 +104,45 @@ class MockModerationAgent:
         
         return text
 
-    def _detect_toxicity_type(self, text: str) -> Optional[str]:
-        """Detect toxicity type using pattern and keyword matching with normalization"""
+    def _detect_toxicity_features(self, text: str) -> Tuple[Optional[str], float, List[str]]:
+        """Detect toxicity type and calculate weighted score"""
         text_lower = text.lower()
         normalized_text = self._normalize_text(text)
+        
+        matched_categories = []
+        max_score = 0.0
+        indicators = []
 
-        # 1. Check keyword list first (original and normalized)
-        for kw_pattern in self.compiled_keywords:
-            if kw_pattern.search(text_lower) or kw_pattern.search(normalized_text):
-                return "harassment"
+        # 1. Check keyword weights
+        for keyword, pattern in self.compiled_keywords.items():
+            if pattern.search(text_lower) or pattern.search(normalized_text):
+                weight = self.keyword_weights.get(keyword, 0.5)
+                max_score = max(max_score, weight)
+                indicators.append(f"keyword:{keyword}")
+                if "harassment" not in matched_categories:
+                    matched_categories.append("harassment")
 
-        # 2. Check regex patterns (original and normalized)
-        for toxicity_type, patterns in self.compiled_patterns.items():
+        # 2. Check category patterns
+        for category, patterns in self.compiled_patterns.items():
+            cat_weight = self.category_weights.get(category, 0.5)
             for pattern in patterns:
                 if pattern.search(text_lower) or pattern.search(normalized_text):
-                    return toxicity_type
+                    max_score = max(max_score, cat_weight)
+                    indicators.append(f"pattern:{category}")
+                    if category not in matched_categories:
+                        matched_categories.append(category)
+                    break # One match per category is enough
 
-        return None
+        # Determine primary category (one with highest weight)
+        primary_category = None
+        if matched_categories:
+            primary_category = max(matched_categories, key=lambda c: self.category_weights.get(c, 0.5))
+
+        # Adjust score if multiple indicators are present
+        if len(indicators) > 1:
+            max_score = min(0.99, max_score + (0.05 * (len(indicators) - 1)))
+
+        return primary_category, max_score, indicators
 
     def _is_safe_language(self, text: str) -> bool:
         """Check if text contains safe language indicators"""
@@ -130,18 +160,9 @@ class MockModerationAgent:
         include_examples: bool = True
     ) -> Tuple[ModerationResponse, int]:
         """
-        Moderate text and optional image using mock logic
+        Moderate text and optional image using weighted mock logic
         """
         start_time = time.time()
-
-        # Simple image moderation mock: if image_data is provided, increase confidence
-        image_toxic_boost = 0
-        if image_data:
-            # Simulate image analysis latency
-            time.sleep(0.1)
-            # For testing, we could look for certain base64 patterns or just boost
-            # based on text context if an image is present
-            image_toxic_boost = 0.1
 
         # Combine history with current text for better pattern matching
         full_text_to_check = text
@@ -150,10 +171,12 @@ class MockModerationAgent:
             full_text_to_check = f"{history_text} {text}"
 
         try:
-            # Generate query embedding
+            # 1. Rule-based detection (Weighted Scoring)
+            pattern_category, pattern_score, indicators = self._detect_toxicity_features(full_text_to_check)
+            safe_language = self._is_safe_language(text)
+
+            # 2. Vector-store similarity (RAG)
             query_embedding = self.embedding_generator.encode_single(text)
-            
-            # Retrieve similar examples
             retrieved_docs = []
             if include_examples:
                 retrieved_docs = self.vector_store.search(
@@ -181,92 +204,68 @@ class MockModerationAgent:
             toxicity_types = []
 
             for doc_text, similarity, metadata in retrieved_docs:
-                if similarity > 0.5:  # High similarity threshold
+                if similarity > 0.5:
                     if metadata.get("is_toxic", False):
                         toxic_votes += similarity * 10
                         toxicity_types.append(metadata.get("toxicity_type", "unknown"))
                     else:
                         safe_votes += similarity * 10
 
-            # Pattern-based detection (using history context)
-            pattern_toxicity = self._detect_toxicity_type(full_text_to_check)
-            safe_language = self._is_safe_language(text)
+            # Calculate RAG confidence
+            rag_confidence = (toxic_votes - safe_votes) / max(toxic_votes + safe_votes, 1)
+            rag_confidence = max(0, min(1, (rag_confidence + 1) / 2))
 
-            # Calculate confidence
-            base_confidence = (toxic_votes - safe_votes) / max(toxic_votes + safe_votes, 1)
-            base_confidence = max(0, min(1, (base_confidence + 1) / 2))
+            # --- HYBRID CONFIDENCE CALCULATION ---
+            # Combine rule-based score with RAG results
+            final_confidence = max(pattern_score, rag_confidence)
+            
+            if safe_language and final_confidence < 0.8:
+                final_confidence = max(0.1, final_confidence - 0.3)
 
-            # Adjust based on pattern detection
-            if pattern_toxicity:
-                base_confidence = max(base_confidence, 0.75)
-                if pattern_toxicity not in toxicity_types:
-                    toxicity_types.append(pattern_toxicity)
-
-            if safe_language and not pattern_toxicity:
-                base_confidence = min(base_confidence, 0.3)
-
-            # Determine if toxic
-            is_toxic = base_confidence > 0.5 or pattern_toxicity is not None
-
+            is_toxic = final_confidence > 0.5
+            
             # Determine toxicity type
-            if is_toxic and toxicity_types:
-                # Most common toxicity type
-                toxicity_type = max(set(toxicity_types), key=toxicity_types.count)
-            elif is_toxic:
-                toxicity_type = pattern_toxicity or "harassment"
+            if is_toxic:
+                if pattern_category:
+                    toxicity_type = pattern_category
+                elif toxicity_types:
+                    toxicity_type = max(set(toxicity_types), key=toxicity_types.count)
+                else:
+                    toxicity_type = "harassment"
             else:
                 toxicity_type = "safe"
 
             # Generate explanation
             if is_toxic:
-                if pattern_toxicity:
-                    explanation = f"Detected pattern matching {toxicity_type.replace('_', ' ')}. "
-                else:
-                    explanation = "Similar to known toxic examples in the database. "
-
-                if retrieved_docs:
-                    similar_example = retrieved_docs[0][0]
-                    explanation += f"Similar to: '{similar_example[:50]}...'"
+                explanation = f"Detected {toxicity_type.replace('_', ' ')} indicators (Score: {final_confidence:.2f}). "
+                if indicators:
+                    explanation += f"Triggers: {', '.join(indicators[:3])}. "
+                if retrieved_docs and retrieved_docs[0][1] > 0.6:
+                    explanation += f"Similar to known patterns."
             else:
-                if safe_language:
-                    explanation = "Contains respectful communication patterns. "
-                else:
-                    explanation = "No significant toxicity indicators found. "
-                explanation += "Appears to be acceptable communication."
+                explanation = "No significant toxicity indicators found. Appears safe."
 
             # Determine if should block
-            should_block = base_confidence > 0.7 or (
-                pattern_toxicity in ["indirect_threat", "hate_speech"] and base_confidence > 0.6
-            )
+            should_block = final_confidence > 0.7 or (is_toxic and final_confidence > 0.6)
 
-            # Calculate latency
             latency_ms = int((time.time() - start_time) * 1000)
 
-            # Create response
-            moderation_response = ModerationResponse(
+            return ModerationResponse(
                 is_toxic=is_toxic,
-                confidence=round(base_confidence, 2),
+                confidence=round(float(final_confidence), 2),
                 toxicity_type=ToxicityType(toxicity_type),
                 explanation=explanation,
                 should_block=should_block,
                 latency_ms=latency_ms,
                 retrieved_examples=[doc[0] for doc in retrieved_docs[:3]] if include_examples else None,
                 metadata={
-                    "severity": int(base_confidence * 5),
-                    "key_indicators": toxicity_types,
-                    "model": "mock-rule-based",
-                    "toxic_votes": toxic_votes,
-                    "safe_votes": safe_votes,
-                    "pattern_detected": pattern_toxicity is not None
+                    "severity": int(final_confidence * 5),
+                    "indicators": indicators,
+                    "model": "mock-weighted-hybrid",
+                    "rag_confidence": round(rag_confidence, 2),
+                    "rule_score": round(pattern_score, 2)
                 }
-            )
-
-            logger.info(
-                f"Mock moderation complete: toxic={is_toxic}, "
-                f"confidence={base_confidence:.2f}, latency={latency_ms}ms"
-            )
-
-            return moderation_response, latency_ms
+            ), latency_ms
 
         except Exception as e:
             logger.error(f"Error during mock moderation: {e}", exc_info=True)

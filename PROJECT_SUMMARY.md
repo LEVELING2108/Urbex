@@ -40,8 +40,9 @@ This is a complete, production-ready implementation of a Context-Aware Content M
 ### 6. Enhanced Moderation Engine ✓
 - **Dynamic Pattern Loading**: Externalized word library in `data/patterns.json` for easy updates.
 - **Fuzzy Matching**: Text normalization to catch intentional misspellings and character substitutions (e.g., `h4te`, `st*pid`).
+- **Weighted Scoring**: Multi-indicator aggregation where confidence increases with the severity and quantity of matches.
+- **Hybrid Confidence**: Intelligent merging of rule-based scoring and Vector Store similarity (RAG).
 - **Comprehensive Library**: Expanded keyword list covering 50+ common toxic terms and patterns.
-- **Multi-Category Detection**: Improved classification for Spam, Sexual Content, and Indirect Threats.
 
 ## Project Structure
 

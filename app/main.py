@@ -213,17 +213,21 @@ async def global_exception_handler(request: Request, exc: Exception):
 # Include API routes
 app.include_router(router)
 
-# Mount static files
+# Mount static files and frontend
 if not os.path.exists("static"):
     os.makedirs("static")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-
-# Root endpoint
-@app.get("/")
-async def root():
-    """Serve the frontend demo"""
-    return FileResponse("static/index.html")
+# Mount Premium React UI (if built)
+FRONTEND_DIST = "frontend/dist"
+if os.path.exists(FRONTEND_DIST):
+    app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
+else:
+    # Fallback to demo frontend if React UI not built
+    @app.get("/")
+    async def root():
+        """Serve the legacy frontend demo"""
+        return FileResponse("static/index.html")
 
 
 # Admin endpoint

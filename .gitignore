@@ -75,4 +75,9 @@ tmp/
 temp/
 *.tmp
 
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.venv/
+
 /GEMINI.md

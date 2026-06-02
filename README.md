@@ -21,7 +21,10 @@ Analyzes the current message in the context of recent conversation history.
 ### 3. 🔄 Active Learning Loop
 A self-healing system that learns from human feedback. Incorrect predictions are automatically re-embedded into the vector store to prevent future errors.
 
-### 4. 🔐 Enterprise Security
+### 4. 💎 Premium Glass UI
+A high-end, enterprise-grade frontend built with React 18 and Tailwind CSS. Features a "Glassmorphism" aesthetic with smooth animations and real-time moderation console.
+
+### 5. 🔐 Enterprise Security
 *   **API Key Auth:** Secure endpoints with `X-API-Key` validation.
 *   **Persistent Logging:** Full audit trail of all moderation decisions in SQLAlchemy/SQLite.
 
@@ -102,7 +105,7 @@ A comprehensive UI for platform owners to visualize system performance.
 *   **Access:** Available at `/admin` (requires API Key).
 
 ### 3. 🖼️ Multi-Modal Moderation (Vision)
-Advanced safety for visual content using Gemini 1.5 Flash and GPT-4o.
+Advanced safety for visual content using GPT-4o and Gemini 1.5 Flash.
 *   **Image Analysis:** Detect prohibited visual content, NSFW, and text-in-image threats.
 *   **Unified API:** Send text, images, or both for a single, context-aware decision.
 *   **Frontend Integration:** Built-in image upload and preview in the live demo.

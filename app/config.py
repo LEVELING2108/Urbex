@@ -99,7 +99,7 @@ class Settings(BaseSettings):
     api_key: str = Field(default="urbex_secret_key_2024", validation_alias="API_KEY")
     api_key_header: str = Field(default="X-API-Key", validation_alias="API_KEY_HEADER")
     cors_origins: List[str] = Field(
-        default=["http://localhost:3000"],
+        default=["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5173"],
         validation_alias="CORS_ORIGINS"
     )
 

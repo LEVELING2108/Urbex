@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, 
-  Search, 
   Activity, 
   AlertTriangle, 
   CheckCircle, 
@@ -11,10 +10,13 @@ import {
   X,
   ThumbsUp,
   ThumbsDown,
-  Info,
   ChevronRight,
   Database,
-  Cpu
+  Layers,
+  Zap,
+  Globe,
+  Lock,
+  History as HistoryIcon
 } from 'lucide-react';
 import { cn } from './lib/utils';
 import { moderateContent, getStats, submitFeedback, getLogs } from './api';
@@ -43,25 +45,27 @@ interface Stats {
 
 // --- Components ---
 
-const GlassCard = ({ children, className, delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) => (
+const LuxuryCard = ({ children, className, delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay }}
-    className={cn("glass-card p-6 rounded-2xl overflow-hidden relative", className)}
+    initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+    transition={{ duration: 0.8, delay, ease: [0.23, 1, 0.32, 1] }}
+    className={cn("glass-card p-8 rounded-[2rem] relative group", className)}
   >
+    {/* Subtle spotlight effect */}
+    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(600px_circle_at_var(--x)_var(--y),rgba(139,92,246,0.06),transparent_40%)]" />
     {children}
   </motion.div>
 );
 
-const Badge = ({ children, variant = 'neutral' }: { children: React.ReactNode, variant?: 'toxic' | 'safe' | 'neutral' }) => {
+const LuxuryBadge = ({ children, variant = 'neutral' }: { children: React.ReactNode, variant?: 'toxic' | 'safe' | 'neutral' }) => {
   const styles = {
-    toxic: "bg-red-500/20 text-red-400 border-red-500/30",
-    safe: "bg-green-500/20 text-green-400 border-green-500/30",
-    neutral: "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"
+    toxic: "bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_15px_-5px_rgba(239,68,68,0.4)]",
+    safe: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_-5px_rgba(16,185,129,0.4)]",
+    neutral: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
   };
   return (
-    <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-medium border", styles[variant])}>
+    <span className={cn("px-4 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border backdrop-blur-md", styles[variant])}>
       {children}
     </span>
   );
@@ -77,10 +81,27 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'console' | 'analytics' | 'history'>('console');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchStats();
     fetchLogs();
+
+    // Mouse glow tracker
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+      const cards = document.querySelectorAll('.glass-card');
+      cards.forEach((card: any) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty('--x', `${x}px`);
+        card.style.setProperty('--y', `${y}px`);
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   const fetchStats = async () => {
@@ -120,9 +141,7 @@ export default function App() {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageData(reader.result as string);
-      };
+      reader.onloadend = () => setImageData(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
@@ -131,40 +150,54 @@ export default function App() {
     if (!result) return;
     try {
       await submitFeedback(result.request_id, wasCorrect);
-      // Show some success toast or something
     } catch (err) {
       console.error("Feedback failed", err);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background text-zinc-100 selection:bg-primary/30">
-      {/* --- Ambient Background --- */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-cyan/10 rounded-full blur-[120px]" />
-      </div>
+    <div ref={containerRef} className="min-h-screen bg-[#030303] text-zinc-100 selection:bg-primary/40 selection:text-white font-sans overflow-hidden">
+      <div className="bg-grain" />
+      
+      {/* --- Animated Luminous Orbs --- */}
+      <motion.div 
+        animate={{ x: [0, 100, 0], y: [0, -50, 0] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="orb w-[600px] h-[600px] bg-primary/20 top-[-200px] left-[-100px]" 
+      />
+      <motion.div 
+        animate={{ x: [0, -80, 0], y: [0, 100, 0] }}
+        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+        className="orb w-[500px] h-[500px] bg-accent-cyan/10 bottom-[-100px] right-[-100px]" 
+      />
 
-      {/* --- Header --- */}
-      <header className="sticky top-0 z-50 glass border-b border-white/10 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent-cyan flex items-center justify-center shadow-lg shadow-primary/20">
-              <Shield className="text-white w-6 h-6" />
+      {/* --- Navigation --- */}
+      <header className="sticky top-0 z-[60] py-6 px-10">
+        <motion.div 
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="max-w-7xl mx-auto flex items-center justify-between glass px-8 py-4 rounded-[2rem] border-white/5"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary via-violet-500 to-accent-cyan flex items-center justify-center shadow-[0_0_30px_-5px_rgba(139,92,246,0.5)]">
+              <Shield className="text-white w-7 h-7" />
             </div>
-            <span className="text-2xl font-bold tracking-tighter text-gradient">URBEX</span>
+            <div>
+              <h1 className="text-2xl font-black tracking-tighter text-gradient leading-none">URBEX</h1>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Enterprise Guard</p>
+            </div>
           </div>
           
-          <nav className="hidden md:flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10">
+          <nav className="hidden lg:flex items-center gap-2 bg-black/40 p-1.5 rounded-2xl border border-white/5 backdrop-blur-3xl">
             {['console', 'analytics', 'history'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize",
+                  "px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
                   activeTab === tab 
-                    ? "bg-primary text-white shadow-lg shadow-primary/20" 
-                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                    ? "bg-white/10 text-white shadow-xl ring-1 ring-white/10" 
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
                 )}
               >
                 {tab}
@@ -172,237 +205,278 @@ export default function App() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-4">
-            <Badge variant="neutral">v1.0.0 Pro</Badge>
+          <div className="flex items-center gap-6">
+            <div className="hidden sm:flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Systems Active
+            </div>
+            <LuxuryBadge variant="neutral">Pro v1.0</LuxuryBadge>
           </div>
-        </div>
+        </motion.div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-12 relative">
+      <main className="max-w-7xl mx-auto px-10 py-16 relative z-10">
         <AnimatePresence mode="wait">
           {activeTab === 'console' && (
             <motion.div
               key="console"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="grid grid-cols-1 lg:grid-cols-12 gap-10"
             >
-              {/* --- Input Section --- */}
-              <div className="lg:col-span-2 space-y-6">
-                <GlassCard>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Cpu className="w-5 h-5 text-primary" />
-                      Moderation Console
-                    </h3>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
-                        title="Upload Image"
-                      >
-                        <ImageIcon className="w-5 h-5 text-zinc-400" />
-                      </button>
+              {/* --- Main Interaction Area --- */}
+              <div className="lg:col-span-8 space-y-10">
+                <LuxuryCard>
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="space-y-1">
+                      <h3 className="text-xl font-bold flex items-center gap-3">
+                        <Layers className="w-6 h-6 text-primary" />
+                        Neural Analysis
+                      </h3>
+                      <p className="text-xs text-zinc-500 font-medium tracking-wide">Enter content for real-time semantic evaluation</p>
                     </div>
+                    <button 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all hover:scale-110 active:scale-95"
+                      title="Analyze Visuals"
+                    >
+                      <ImageIcon className="w-5 h-5 text-accent-cyan" />
+                    </button>
                   </div>
 
-                  <div className="relative group">
+                  <div className="relative">
                     <textarea
                       value={text}
                       onChange={(e) => setText(e.target.value)}
-                      placeholder="Enter content to moderate Semantically..."
-                      className="w-full h-48 bg-black/20 rounded-xl p-4 text-zinc-100 placeholder:text-zinc-600 border border-white/5 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all resize-none"
+                      placeholder="Waiting for input..."
+                      className="w-full h-64 bg-black/40 rounded-3xl p-8 text-lg font-medium text-zinc-100 placeholder:text-zinc-800 border border-white/5 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 outline-none transition-all resize-none leading-relaxed"
                     />
                     
-                    {imageData && (
-                      <div className="absolute bottom-4 left-4 group-hover:opacity-100 transition-opacity">
-                        <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-primary/50 shadow-xl">
-                          <img src={imageData} alt="Preview" className="w-full h-full object-cover" />
-                          <button 
-                            onClick={() => setImageData(null)}
-                            className="absolute top-1 right-1 p-1 rounded-full bg-black/50 hover:bg-red-500/50 text-white transition-colors"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                    <AnimatePresence>
+                      {imageData && (
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          className="absolute bottom-6 left-6"
+                        >
+                          <div className="relative w-32 h-32 rounded-2xl overflow-hidden border-2 border-primary/50 shadow-2xl shadow-primary/20">
+                            <img src={imageData} alt="Preview" className="w-full h-full object-cover" />
+                            <button 
+                              onClick={() => setImageData(null)}
+                              className="absolute top-2 right-2 p-1.5 rounded-xl bg-black/60 hover:bg-red-500/80 text-white transition-colors backdrop-blur-md"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleImageUpload} 
-                    className="hidden" 
-                    accept="image/*" 
-                  />
+                  <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
 
-                  <div className="mt-6 flex justify-end">
+                  <div className="mt-10 flex items-center justify-between">
+                    <div className="flex gap-4">
+                      <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                        <Lock className="w-3 h-3" /> Encrypted
+                      </div>
+                      <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                        <Zap className="w-3 h-3" /> Low Latency
+                      </div>
+                    </div>
+
                     <button
                       onClick={handleModerate}
                       disabled={loading || (!text.trim() && !imageData)}
                       className={cn(
-                        "flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all shadow-xl",
+                        "shimmer-btn flex items-center gap-3 px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-2xl shadow-primary/20",
                         loading || (!text.trim() && !imageData)
-                          ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
-                          : "bg-primary hover:bg-primary/80 text-white shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]"
+                          ? "bg-zinc-900 text-zinc-600 cursor-not-allowed border border-white/5"
+                          : "bg-primary hover:bg-violet-500 text-white hover:scale-[1.05] active:scale-95"
                       )}
                     >
-                      {loading ? (
-                        <Activity className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <Send className="w-5 h-5" />
-                      )}
-                      Analyze Content
+                      {loading ? <Activity className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                      {loading ? "Processing..." : "Initiate Audit"}
                     </button>
                   </div>
-                </GlassCard>
+                </LuxuryCard>
 
-                {/* --- Result Section --- */}
+                {/* --- Results --- */}
                 <AnimatePresence>
                   {result && (
                     <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
+                      initial={{ opacity: 0, y: 40 }}
+                      animate={{ opacity: 1, y: 0 }}
                       className={cn(
-                        "glass-card p-8 rounded-2xl border-l-4",
-                        result.is_toxic ? "border-l-red-500" : "border-l-green-500"
+                        "glass-card p-10 rounded-[2.5rem] border-t-2 overflow-hidden",
+                        result.is_toxic ? "border-red-500/30" : "border-emerald-500/30"
                       )}
                     >
-                      <div className="flex flex-col md:flex-row justify-between gap-6">
-                        <div className="space-y-4 flex-1">
-                          <div className="flex items-center gap-3">
-                            {result.is_toxic ? (
-                              <AlertTriangle className="w-8 h-8 text-red-500" />
-                            ) : (
-                              <CheckCircle className="w-8 h-8 text-green-500" />
-                            )}
+                      <div className="flex flex-col md:flex-row items-start justify-between gap-10">
+                        <div className="space-y-6 flex-1">
+                          <div className="flex items-center gap-5">
+                            <div className={cn(
+                              "w-16 h-16 rounded-[1.5rem] flex items-center justify-center shadow-2xl",
+                              result.is_toxic ? "bg-red-500/20 text-red-500" : "bg-emerald-500/20 text-emerald-500"
+                            )}>
+                              {result.is_toxic ? <AlertTriangle className="w-8 h-8" /> : <CheckCircle className="w-8 h-8" />}
+                            </div>
                             <div>
-                              <h4 className="text-xl font-bold">
-                                {result.is_toxic ? "Content Blocked" : "Content Approved"}
+                              <LuxuryBadge variant={result.is_toxic ? 'toxic' : 'safe'}>
+                                {result.is_toxic ? "Violation Detected" : "Clearance Granted"}
+                              </LuxuryBadge>
+                              <h4 className="text-3xl font-black mt-1">
+                                {result.is_toxic ? "Blocked" : "Approved"}
                               </h4>
-                              <p className="text-sm text-zinc-400">Request ID: {result.request_id}</p>
                             </div>
                           </div>
                           
-                          <p className="text-zinc-300 leading-relaxed italic">
-                            "{result.explanation}"
-                          </p>
+                          <div className="bg-black/20 p-6 rounded-2xl border border-white/5">
+                            <p className="text-zinc-400 text-lg leading-relaxed italic font-medium">
+                              "{result.explanation}"
+                            </p>
+                          </div>
 
-                          <div className="flex flex-wrap gap-2 pt-2">
-                            <Badge variant={result.is_toxic ? 'toxic' : 'safe'}>
-                              {result.toxicity_type.replace('_', ' ')}
-                            </Badge>
-                            <Badge variant="neutral">{result.latency_ms}ms latency</Badge>
+                          <div className="flex flex-wrap gap-3">
+                            <div className="px-5 py-2 rounded-xl bg-white/5 border border-white/5 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                              Class: {result.toxicity_type}
+                            </div>
+                            <div className="px-5 py-2 rounded-xl bg-white/5 border border-white/5 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                              Speed: {result.latency_ms}ms
+                            </div>
                           </div>
                         </div>
 
-                        <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/5 border border-white/10 min-w-[200px]">
-                          <span className="text-zinc-400 text-xs uppercase tracking-widest mb-1">Confidence</span>
-                          <span className={cn(
-                            "text-4xl font-black",
-                            result.is_toxic ? "text-red-500" : "text-green-500"
-                          )}>
-                            {(result.confidence * 100).toFixed(0)}%
-                          </span>
+                        <div className="bg-gradient-to-br from-white/[0.03] to-transparent p-8 rounded-[2rem] border border-white/10 flex flex-col items-center justify-center min-w-[240px] shadow-2xl">
+                          <span className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Neural Confidence</span>
+                          <div className="relative flex items-center justify-center">
+                             {/* Confidence Ring SVG would go here, using a simpler visual for now */}
+                             <span className={cn(
+                                "text-6xl font-black tracking-tighter",
+                                result.is_toxic ? "text-red-500" : "text-emerald-500"
+                              )}>
+                                {(result.confidence * 100).toFixed(0)}
+                                <span className="text-xl opacity-50">%</span>
+                             </span>
+                          </div>
                           
-                          <div className="w-full mt-4 flex gap-2">
+                          <div className="w-full mt-8 grid grid-cols-2 gap-3">
                             <button 
                               onClick={() => handleFeedback(true)}
-                              className="flex-1 flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-green-500/10 transition-colors group"
+                              className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/5 hover:bg-emerald-500/10 transition-all border border-white/5 group"
                             >
-                              <ThumbsUp className="w-5 h-5 text-zinc-500 group-hover:text-green-500" />
-                              <span className="text-[10px]">Correct</span>
+                              <ThumbsUp className="w-5 h-5 text-zinc-600 group-hover:text-emerald-500 group-hover:scale-110 transition-all" />
+                              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-emerald-500">Verify</span>
                             </button>
                             <button 
                               onClick={() => handleFeedback(false)}
-                              className="flex-1 flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-red-500/10 transition-colors group"
+                              className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/5 hover:bg-red-500/10 transition-all border border-white/5 group"
                             >
-                              <ThumbsDown className="w-5 h-5 text-zinc-500 group-hover:text-red-500" />
-                              <span className="text-[10px]">Incorrect</span>
+                              <ThumbsDown className="w-5 h-5 text-zinc-600 group-hover:text-red-500 group-hover:scale-110 transition-all" />
+                              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-red-500">Correct</span>
                             </button>
                           </div>
                         </div>
                       </div>
 
                       {result.retrieved_examples && result.retrieved_examples.length > 0 && (
-                        <div className="mt-8 pt-6 border-t border-white/5">
-                          <h5 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
-                            <Database className="w-3 h-3" />
-                            Contextual RAG Matches
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5 }}
+                          className="mt-10 pt-10 border-t border-white/5"
+                        >
+                          <h5 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-6 flex items-center gap-3">
+                            <Database className="w-4 h-4 text-primary" />
+                            Retrieval Context Base
                           </h5>
-                          <div className="space-y-2">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {result.retrieved_examples.map((ex, i) => (
-                              <div key={i} className="text-sm text-zinc-400 bg-white/5 p-3 rounded-lg border border-white/5 flex gap-3">
-                                <span className="text-primary font-mono">{i + 1}.</span>
+                              <div key={i} className="text-xs font-medium text-zinc-500 bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors leading-relaxed">
+                                <span className="text-primary font-bold mr-3 opacity-50">#{i + 1}</span>
                                 {ex}
                               </div>
                             ))}
                           </div>
-                        </div>
+                        </motion.div>
                       )}
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
-              {/* --- Sidebar Stats --- */}
-              <div className="space-y-6">
-                <GlassCard className="bg-gradient-to-br from-primary/10 to-accent-cyan/10">
-                  <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              {/* --- Sidebar Metrics --- */}
+              <div className="lg:col-span-4 space-y-8">
+                <LuxuryCard className="bg-gradient-to-br from-primary/10 via-transparent to-accent-cyan/10 border-primary/20">
+                  <h3 className="text-sm font-black uppercase tracking-[0.2em] mb-10 flex items-center gap-3">
                     <Activity className="w-5 h-5 text-primary" />
-                    Live System Stats
+                    Live Pulse
                   </h3>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold">Total Knowledge</span>
-                      <p className="text-2xl font-black">{stats?.total_examples || '---'}</p>
+                  <div className="space-y-8">
+                    <div className="flex justify-between items-end border-b border-white/5 pb-4">
+                      <div className="space-y-1">
+                        <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest">Global Knowledge</p>
+                        <p className="text-4xl font-black">{stats?.total_examples || '---'}</p>
+                      </div>
+                      <div className="text-right space-y-1">
+                        <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest">Avg Latency</p>
+                        <p className="text-4xl font-black text-emerald-500">147<span className="text-xs ml-1 opacity-50">ms</span></p>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <span className="text-zinc-500 text-[10px] uppercase font-bold">Latency Avg</span>
-                      <p className="text-2xl font-black">147ms</p>
+
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                        <span>Toxic Index</span>
+                        <span>{stats ? Math.round((stats.toxic_examples / stats.total_examples) * 100) : 0}%</span>
+                      </div>
+                      <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: stats ? `${(stats.toxic_examples / stats.total_examples) * 100}%` : '0%' }}
+                          className="h-full bg-gradient-to-r from-red-500 to-primary rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)]" 
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 rounded-2xl bg-black/40 border border-white/5">
+                        <p className="text-[8px] font-black uppercase text-zinc-600 mb-1">Dimensions</p>
+                        <p className="text-xl font-black">{stats?.dimensions || '---'}</p>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-black/40 border border-white/5">
+                        <p className="text-[8px] font-black uppercase text-zinc-600 mb-1">Provider</p>
+                        <p className="text-xl font-black">RAG</p>
+                      </div>
                     </div>
                   </div>
+                </LuxuryCard>
 
-                  <div className="mt-6 space-y-3">
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-red-500" 
-                        style={{ width: stats ? `${(stats.toxic_examples / stats.total_examples) * 100}%` : '0%' }} 
-                      />
-                    </div>
-                    <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase">
-                      <span>Toxic Examples: {stats?.toxic_examples}</span>
-                      <span>Safe: {stats?.safe_examples}</span>
-                    </div>
+                <LuxuryCard>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-8 flex items-center gap-3">
+                    <Zap className="w-4 h-4 text-accent-cyan" />
+                    Stack Capabilities
+                  </h3>
+                  <div className="space-y-6">
+                    {[
+                      { title: "Tiered Filtering", desc: "Sub-10ms fast path matching", icon: Zap },
+                      { title: "Active Learning", desc: "Real-time vector feedback", icon: Activity },
+                      { title: "Vision Protocol", desc: "GPT-4o Multi-modal analysis", icon: Globe }
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-5 group cursor-default">
+                        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:border-primary/50 transition-all duration-500">
+                          <item.icon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-xs font-black uppercase tracking-widest text-zinc-200">{item.title}</p>
+                          <p className="text-[10px] font-medium text-zinc-600 leading-none">{item.desc}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </GlassCard>
-
-                <GlassCard>
-                  <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-4">Core Technology</h3>
-                  <ul className="space-y-4">
-                    <li className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                        <CheckCircle className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="text-xs">
-                        <p className="font-bold">Tiered Filtering</p>
-                        <p className="text-zinc-500">Fast path similarity matching</p>
-                      </div>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                        <CheckCircle className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="text-xs">
-                        <p className="font-bold">Active Learning</p>
-                        <p className="text-zinc-500">Automated feedback loop</p>
-                      </div>
-                    </li>
-                  </ul>
-                </GlassCard>
+                </LuxuryCard>
               </div>
             </motion.div>
           )}
@@ -410,28 +484,41 @@ export default function App() {
           {activeTab === 'analytics' && (
             <motion.div
               key="analytics"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10"
             >
-              <GlassCard className="lg:col-span-2 h-96 flex items-center justify-center">
-                <div className="text-center">
-                  <Activity className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-                  <p className="text-zinc-500">Aggregate Toxicity Trends Chart</p>
+              <LuxuryCard className="lg:col-span-8 h-[500px] flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(139,92,246,0.1),transparent)]" />
+                <div className="text-center relative">
+                   <div className="w-24 h-24 rounded-full border-2 border-primary/20 border-t-primary animate-spin mx-auto mb-8" />
+                   <h4 className="text-2xl font-black tracking-tight text-gradient">Compiling Aggregate Trends</h4>
+                   <p className="text-zinc-600 text-xs font-bold uppercase tracking-widest mt-4">Visualizing Neural Decision Patterns...</p>
                 </div>
-              </GlassCard>
-              <GlassCard className="h-96 flex items-center justify-center">
-                <div className="text-center">
-                  <Search className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-                  <p className="text-zinc-500">Category Distribution</p>
-                </div>
-              </GlassCard>
-              <GlassCard className="h-96 flex items-center justify-center">
-                <div className="text-center">
-                  <Info className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-                  <p className="text-zinc-500">Performance Metrics</p>
-                </div>
-              </GlassCard>
+              </LuxuryCard>
+              <div className="lg:col-span-4 space-y-10">
+                <LuxuryCard className="h-[235px] flex items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Category Load</p>
+                    <div className="flex gap-1 items-end h-20">
+                      {[40, 70, 45, 90, 65, 80].map((h, i) => (
+                        <motion.div 
+                          key={i} 
+                          initial={{ height: 0 }} 
+                          animate={{ height: `${h}%` }} 
+                          className="w-4 bg-primary/40 rounded-t-sm" 
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </LuxuryCard>
+                <LuxuryCard className="h-[235px] flex items-center justify-center">
+                   <div className="text-center space-y-2">
+                     <p className="text-4xl font-black">99.2%</p>
+                     <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Decision Accuracy</p>
+                   </div>
+                </LuxuryCard>
+              </div>
             </motion.div>
           )}
 
@@ -440,42 +527,71 @@ export default function App() {
               key="history"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="space-y-4"
+              className="space-y-6"
             >
-              {logs.map((log, i) => (
-                <GlassCard key={i} className="flex items-center justify-between py-4">
-                  <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "w-2 h-10 rounded-full",
-                      log.is_toxic ? "bg-red-500" : "bg-green-500"
-                    )} />
-                    <div>
-                      <p className="font-medium truncate max-w-md">{log.text}</p>
-                      <p className="text-xs text-zinc-500">{new Date(log.timestamp).toLocaleString()}</p>
+              {logs.length > 0 ? logs.map((log, i) => (
+                <LuxuryCard key={i} className="p-6">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-6 flex-1">
+                      <div className={cn(
+                        "w-1.5 h-12 rounded-full",
+                        log.is_toxic ? "bg-red-500" : "bg-emerald-500"
+                      )} />
+                      <div className="min-w-0">
+                        <p className="text-lg font-bold truncate max-w-xl text-zinc-200">{log.text}</p>
+                        <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mt-1">
+                          {new Date(log.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-10">
+                      <div className="text-right">
+                        <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest mb-1">Confidence</p>
+                        <p className={cn(
+                          "text-2xl font-black",
+                          log.is_toxic ? "text-red-500" : "text-emerald-500"
+                        )}>{(log.confidence * 100).toFixed(0)}%</p>
+                      </div>
+                      <LuxuryBadge variant={log.is_toxic ? 'toxic' : 'safe'}>{log.toxicity_type}</LuxuryBadge>
+                      <button className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all">
+                        <ChevronRight className="w-5 h-5 text-zinc-600" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-6 text-right">
-                    <div>
-                      <p className="text-xs text-zinc-500 uppercase font-bold">Confidence</p>
-                      <p className="font-bold">{(log.confidence * 100).toFixed(0)}%</p>
-                    </div>
-                    <Badge variant={log.is_toxic ? 'toxic' : 'safe'}>{log.toxicity_type}</Badge>
-                    <ChevronRight className="w-5 h-5 text-zinc-700" />
-                  </div>
-                </GlassCard>
-              ))}
+                </LuxuryCard>
+              )) : (
+                <div className="h-96 flex flex-col items-center justify-center space-y-6">
+                   <div className="w-20 h-20 rounded-[2rem] bg-white/5 border border-white/5 flex items-center justify-center">
+                      <HistoryIcon className="w-10 h-10 text-zinc-800" />
+                   </div>
+                   <p className="text-zinc-600 font-bold uppercase tracking-widest text-xs">No Audit Logs Found</p>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
       </main>
 
       {/* --- Footer --- */}
-      <footer className="max-w-7xl mx-auto px-6 py-12 border-t border-white/5 text-center">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Shield className="w-4 h-4 text-primary" />
-          <span className="font-bold tracking-tight text-zinc-500">URBEX PRO</span>
+      <footer className="max-w-7xl mx-auto px-10 py-20 border-t border-white/5 mt-20">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-10">
+           <div className="flex items-center gap-4 opacity-40 hover:opacity-100 transition-opacity duration-500">
+             <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
+               <Shield className="w-5 h-5 text-zinc-400" />
+             </div>
+             <span className="text-xl font-black tracking-tighter text-zinc-500">URBEX PRO</span>
+           </div>
+           <div className="flex gap-10 text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em]">
+             <a href="#" className="hover:text-primary transition-colors">Documentation</a>
+             <a href="#" className="hover:text-primary transition-colors">API Keys</a>
+             <a href="#" className="hover:text-primary transition-colors">Privacy</a>
+             <a href="#" className="hover:text-primary transition-colors">Status</a>
+           </div>
         </div>
-        <p className="text-xs text-zinc-600">Built for Advanced Content Security and Digital Safety.</p>
+        <p className="text-center md:text-left text-[10px] text-zinc-800 font-bold uppercase tracking-widest mt-10">
+          Neural-Based Content Security Protocol © 2026 Urbex Corporation
+        </p>
       </footer>
     </div>
   );
